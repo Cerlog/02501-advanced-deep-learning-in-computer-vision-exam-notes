@@ -1,0 +1,37 @@
+
+\section{Syntax examples}
+\subsection{Cone}
+\begin{definition}[Cone]
+A set $K \in \R^n$, when $x \in K $ implies $\alpha x \in K$.
+\end{definition}
+\begin{example}
+$S_1^n  \{ X | X=X^n ,\lambda(x) \ge 0\}$\\
+A matrix with positive eigenvalues.
+\end{example}
+
+\subsubsection{Operations preserving convexity}
+\begin{itemize}
+\item[Intersection] $C  \cap_{i \in \mathbb{I}}C_i$
+\item[Linear map] Let $A : \mathbb{R}^n \to  \R^n$ be a linear map. If $C \in \R^n$ is convex, so is $A(C) = \{Ax \forall x \in C \}$
+\item[Inverse image] $A^{-1}(D) = \{ x \in \R |Ax \in D \}$
+\end{itemize}
+
+\begin{theorem}[Carathéodory's theorem]
+If a point $x \in \R^d$ lies in the convex hull of a set $P$, there is a subset $P'$ of $P$ consisting of $d + 1$ or fewer points such that $x$ lies in the convex hull of $P'$. Equivalently, x lies in an r-simplex with vertices in P.
+\end{theorem}
+
+\section{Convex Functions}
+\begin{definition}[Convex function]
+Let $C \in \R^n$ be convex, $f:C \to \R$ is convex on f if $x,y \in C \times C$. $\forall \alpha \in (0,1)$, $f(\alpha x + (1-\alpha) y) \le f(\alpha x) + f((1-\alpha) y)$
+\end{definition}
+
+\begin{remark}
+$f$ is convex $\Rightarrow$ $-f$ is concave.
+\end{remark}
+
+\section{Support Function}
+Take a set $C \in \R^n$, not necessarily convex.The support function is $\sigma_C = \R^n \to \bar{\R}$. $\sigma_C(x) = \sum \{ \langle x,u\rangle  | u \in C\}$.
+\includegraphics[scale=0.5]{1_1.png}
+\begin{fact}
+The support function binds the supporting hyper-plane.
+\end{fact}

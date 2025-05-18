@@ -1,0 +1,221 @@
+\chapterimage{head2.png} % Chapter heading image
+\chapter{\normalsize Lecture 4: Diffusion Models}
+
+\section{Overview of Diffusion Models}
+
+Diffusion models generate data by reversing a gradual noising process. Unlike other generative models that map from a fixed latent distribution to data, diffusion models:
+
+\begin{itemize}
+    \item Encode images by progressively adding noise over $T$ time steps
+    \item Learn to reverse this process by denoising step-by-step
+    \item Use noisy images as time-dependent latent variables
+\end{itemize}
+
+\subsection*{Key Distinction from Other Generative Models}
+
+Traditional generative models (GANs, VAEs) map latent vectors to data directly. In contrast, diffusion models:
+
+\begin{itemize}
+    \item Work with a sequence of increasingly noisy versions of the data
+    \item Define both forward (noising) and reverse (denoising) Markov processes
+    \item Train a neural network to predict and remove noise at each step
+\end{itemize}
+
+\section{The Forward and Reverse Processes}
+
+\subsection*{Forward Process (Adding Noise)}
+
+The forward process is a Markov chain that gradually adds Gaussian noise:
+
+\begin{itemize}
+    \item \textbf{Mathematical formulation:}
+    \[
+    q(x_{1:T} \mid x_0) := \prod_{t=1}^{T} q(x_t \mid x_{t-1}), \quad q(x_t \mid x_{t-1}) := \mathcal{N}(x_t; \sqrt{1 - \beta_t} x_{t-1}, \beta_t \mathbf{I})
+    \]
+    
+    \item \textbf{Variance schedule:} $\beta_1, \beta_2, \dots, \beta_T$ determines noise scaling
+    \begin{itemize}
+        \item Ho et al. use a linear schedule from $\beta_1 = 10^{-4}$ to $\beta_T = 0.02$
+        \item Nichol et al. later improved this with a cosine schedule
+    \end{itemize}
+    
+    \item \textbf{Closed-form sampling:}
+    \[
+    q(x_t \mid x_0) = \mathcal{N}(x_t; \sqrt{\bar{\alpha}_t} x_0, (1 - \bar{\alpha}_t) \mathbf{I})
+    \]
+    where $\alpha_t := 1 - \beta_t$ and $\bar{\alpha}_t := \prod_{s=1}^{t} \alpha_s$
+    
+    \item \textbf{Reparameterization trick:}
+    \[
+    x_t(x_0, \epsilon) = \sqrt{\bar{\alpha}_t} x_0 + \sqrt{1 - \bar{\alpha}_t} \, \epsilon, \quad \epsilon \sim \mathcal{N}(0, \mathbf{I})
+    \]
+\end{itemize}
+
+\subsection*{Reverse Process (Generative Process)}
+
+The reverse process is also a Markov chain, but with learned Gaussian transitions:
+
+\begin{itemize}
+    \item \textbf{Mathematical formulation:}
+    \[
+    p_\theta(x_{0:T}) := p(x_T) \prod_{t=1}^{T} p_\theta(x_{t-1} \mid x_t), \quad p_\theta(x_{t-1} \mid x_t) := \mathcal{N}(x_{t-1}; \mu_\theta(x_t, t), \Sigma_\theta(x_t, t))
+    \]
+    Initialized with $p(x_T) = \mathcal{N}(x_T; 0, \mathbf{I})$
+    
+    \item \textbf{Key insight:} Instead of predicting $x_{t-1}$ directly, we predict the noise $\epsilon$ that was added
+    \begin{itemize}
+        \item The model $\epsilon_\theta(x_t, t)$ is trained to estimate $\epsilon$ from the noisy image $x_t$
+    \end{itemize}
+    
+    \item \textbf{Sampling equation:}
+    \[
+    x_{t-1} = \frac{1}{\sqrt{\alpha_t}} \left( x_t - \frac{1 - \alpha_t}{\sqrt{1 - \bar{\alpha}_t}} \epsilon_\theta(x_t, t) \right) + \sigma_t z
+    \]
+    Where $\sigma_t = \beta_t$ and $z$ is random noise ($z = 0$ at final step)
+\end{itemize}
+
+
+\section{Model Architecture and Training}
+
+\subsection*{Architecture}
+\begin{itemize}
+    \item \textbf{U-Net backbone:} The noise predictor $\epsilon_\theta$ uses a U-Net architecture.
+    \item \textbf{Time conditioning:} The time step $t$ is an additional input, broadcast and added to the image representation at each layer (similar to positional encoding).
+\end{itemize}
+
+\subsection*{Training Objective}
+\begin{itemize}
+    \item \textbf{Theoretical foundation:} While a variational bound (ELBO) exists, a simpler loss works better in practice.
+    \item \textbf{Simplified loss:}
+    \[
+    L_{\text{simple}}(\theta) := \mathbb{E}_{x_0, \epsilon, t} \left[\left\| \epsilon - \epsilon_\theta\left(\sqrt{\bar{\alpha}_t}x_0 + \sqrt{1 - \bar{\alpha}_t} \, \epsilon, t\right) \right\|^2\right]
+    \]
+    \item \textbf{Intuition:} The model directly predicts the noise that was added to create $x_t$ from $x_0$.
+\end{itemize}
+
+\subsection*{Training Algorithm}
+\begin{enumerate}
+    \item Sample $x_0$ from the data distribution
+    \item Sample a random time step $t \sim \text{Uniform}(\{1, \ldots, T\})$
+    \item Sample random noise $\epsilon \sim \mathcal{N}(0, \mathbf{I})$
+    \item Create noisy sample: \[
+    x_t = \sqrt{\bar{\alpha}_t} x_0 + \sqrt{1 - \bar{\alpha}_t} \, \epsilon
+    \]
+    \item Train the model to predict $\epsilon$ given $x_t$ and $t$
+\end{enumerate}
+
+\subsection*{Sampling/Generation Algorithm}
+\begin{enumerate}
+    \item Sample $x_T \sim \mathcal{N}(0, \mathbf{I})$ (pure noise)
+    \item For $t = T, T-1, \ldots, 1$:
+    \begin{itemize}
+        \item Sample $z \sim \mathcal{N}(0, \mathbf{I})$ if $t > 1$, else $z = 0$
+        \item Compute $x_{t-1}$ using the model prediction
+    \end{itemize}
+    \item Return $x_0$ (the generated image)
+\end{enumerate}
+
+\section{Important Visual Examples}
+
+The slides illustrate the diffusion process with several key visualizations:
+
+\begin{itemize}
+    \item \textbf{Forward (noising) process:} A sprite image gradually becomes more noisy across time steps
+    \item \textbf{Reverse (denoising) process:} Pure noise gradually forms into a coherent sprite image
+    \item \textbf{Generated samples:} Examples of faces generated by the model
+\end{itemize}
+
+These visualizations help understand how:
+\begin{itemize}
+    \item Initial data structure remains visible even with significant noise
+    \item The reverse process reconstructs the data distribution step-by-step
+    \item Different noise schedules affect the quality of latent representations
+\end{itemize}
+
+\section{Important Visual Examples}
+
+The slides illustrate the diffusion process with several key visualizations:
+
+\begin{itemize}
+    \item \textbf{Forward (noising) process:} A sprite image gradually becomes more noisy across time steps
+    \item \textbf{Reverse (denoising) process:} Pure noise gradually forms into a coherent sprite image
+    \item \textbf{Generated samples:} Examples of faces generated by the model
+\end{itemize}
+
+These visualizations help understand how:
+\begin{itemize}
+    \item Initial data structure remains visible even with significant noise
+    \item The reverse process reconstructs the data distribution step-by-step
+    \item Different noise schedules affect the quality of latent representations
+\end{itemize}
+
+\section{Quiz Questions and Answers}
+
+\textbf{Q1: What is the main difference between diffusion models and other generative models like GANs or VAEs?}\\
+\textbf{A1:} In diffusion models, the latent space consists of noisy versions of the data across multiple time steps, rather than a single lower-dimensional latent space. Diffusion models gradually add noise in the forward process and learn to reverse this process, while GANs and VAEs learn direct mappings between latent space and data space.
+
+\vspace{1em}
+\textbf{Q2: What does the denoising model $\epsilon_\theta(x_t, t)$ actually learn to predict?}\\
+\textbf{A2:} The model learns to predict the noise $\epsilon$ that was added to the original image $x_0$ to create the noisy image $x_t$, rather than directly predicting the clean image.
+
+\vspace{1em}
+\textbf{Q3: Why is the variance schedule $\beta_1, \dots, \beta_T$ important in diffusion models?}\\
+\textbf{A3:} The variance schedule controls how quickly noise is added in the forward process. It affects the trade-off between sample quality and generation speed. A well-designed schedule (like the cosine schedule) ensures noise is added at an appropriate rate across all time steps.
+
+\vspace{1em}
+\textbf{Q4: How is the time step $t$ incorporated into the model architecture?}\\
+\textbf{A4:} The time step $t$ is broadcast and added to the image representation at every up/downsampling step of the U-Net, similar to positional encoding in transformers.
+
+\vspace{1em}
+\textbf{Q5: What is the key insight that allows for a simpler loss function in DDPMs?}\\
+\textbf{A5:} The key insight is that instead of optimizing the complex variational bound directly, the model can be trained to simply predict the noise that was added during the forward process, using a mean squared error loss between predicted and actual noise.
+
+\vspace{1em}
+\textbf{Q6: How does sampling differ from training in diffusion models?}\\
+\textbf{A6:} In training, we start with real data $x_0$, add noise to create $x_t$, and train the model to predict the added noise. In sampling, we start with pure noise $x_T$ and iteratively apply the reverse process $p_\theta(x_{t-1} \mid x_t)$ to gradually denoise until we reach $x_0$.
+
+\section{Details Often Overlooked}
+
+\subsection*{Theoretical Connection to Score-Based Models}
+\begin{itemize}
+    \item The noise prediction objective is equivalent to score matching
+    \item $\epsilon_\theta(x_t, t)$ approximates the score function $\nabla_x \log p(x)$
+    \item This connects DDPMs to score-based generative models and Langevin dynamics
+\end{itemize}
+
+\subsection*{Simplified Covariance Choice}
+\begin{itemize}
+    \item The reverse process covariance $\Sigma_\theta(x_t, t)$ is fixed as $\sigma_t^2 \mathbf{I}$ with $\sigma_t^2 = \beta_t$
+    \item This simplification works well in practice but is a modeling choice that could be learned
+\end{itemize}
+
+\subsection*{Impact of Variance Schedule on Sampling}
+\begin{itemize}
+    \item \textbf{Linear schedule:} Later timesteps are almost pure noise
+    \item \textbf{Cosine schedule:} Adds noise more gradually throughout process
+    \item The schedule choice affects both training stability and generation quality
+\end{itemize}
+
+\subsection*{Reuse of Noise Prediction for Different Tasks}
+The same basic DDPM framework can be extended to:
+\begin{itemize}
+    \item Conditional generation (guidance)
+    \item Image-to-image translation
+    \item Inpainting and manipulation
+\end{itemize}
+
+\subsection*{Efficiency Considerations}
+\begin{itemize}
+    \item The iterative nature of diffusion models makes them slower than GANs/VAEs for generation
+    \item Various approaches exist to reduce the number of sampling steps required
+\end{itemize}
+
+\section{Additional Study Tips}
+\begin{enumerate}
+    \item \textbf{Understand the equations:} Work through the derivation of the sampling equation to understand why it works.
+    \item \textbf{Practice tracing through the algorithms:} Be able to describe both the training and sampling algorithms step by step.
+    \item \textbf{Compare with other models:} Be prepared to compare diffusion models with GANs, VAEs, and normalizing flows.
+    \item \textbf{Consider limitations:} Discuss the computational cost of the iterative sampling process and methods to address it.
+    \item \textbf{Follow-up developments:} Familiarize yourself with classifier-free guidance (Ho and Salimans) and improved noise schedules (Nichol et al.) mentioned in the slides.
+\end{enumerate}
+

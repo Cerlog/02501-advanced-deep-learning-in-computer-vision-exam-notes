@@ -1,0 +1,136 @@
+\chapterimage{head2.png} % Chapter heading image
+\chapter{\normalsize Exercise 2 Guided Diffusion Models}
+
+\section*{Understanding Guided Diffusion Models for Class-Conditional Image Generation}
+
+I'll explain the key concepts of guided diffusion models, focusing on \textbf{Classifier Guidance (CG)} and \textbf{Classifier-Free Guidance (CFG)} as applied to generating class-conditional images.
+
+\subsection*{1. Fundamental Concepts of Diffusion Models}
+
+Diffusion models work in two phases:
+
+\begin{itemize}
+    \item \textbf{Forward process:} Gradually adds noise to images until they become pure noise
+    \item \textbf{Reverse process:} Learns to denoise images step by step to generate new samples
+\end{itemize}
+
+In standard diffusion models (DDPMs), the forward process is class-agnostic, meaning it doesn't consider class information when adding noise. However, the reverse process can be guided using class information to generate images from specific categories.
+\subsection*{2. Two Approaches to Guided Diffusion}
+
+\subsubsection*{Classifier Guidance (CG)}
+
+Classifier Guidance uses a separate classifier that is trained to predict the class from noisy images at any timestep $t$. During sampling, the gradient of this classifier with respect to the noisy image is used to \textbf{``push''} the generation toward producing samples of a desired class.
+
+The key mathematical insight is that we want to maximize:
+
+\[
+\nabla_{x_t} \log p(y \mid x_t)
+\]
+
+This gradient is added to the score function in DDPM to tilt the sampling path toward images of class $y$.
+
+\paragraph{Implementation details:}
+\begin{enumerate}
+    \item The classifier must be trained to work on noisy images, not just clean ones
+    \item The timestep $t$ must be provided as input to the classifier
+    \item During generation, the classifier's gradient is combined with the diffusion model's output
+\end{enumerate}
+
+\subsubsection*{Classifier-Free Guidance (CFG)}
+
+Classifier-Free Guidance eliminates the need for a separate classifier. Instead, it trains a single conditional UNet to generate both conditional outputs (using labels) and unconditional outputs (by dropping labels at random during training).
+
+\paragraph{Training process:}
+\begin{enumerate}
+    \item During training, labels are randomly dropped with some probability (usually 10--20\%)
+    \item This teaches the model to produce both unconditional and conditional scores
+\end{enumerate}
+
+\paragraph{Sampling formula:} At generation time, the outputs are combined using:
+
+\[
+\epsilon_{\text{guided}} = (1 + w)\epsilon_\theta(x_t, t, y) - w\epsilon_\theta(x_t, t, \emptyset)
+\]
+
+Where $w$ is the guidance scale that controls the strength of conditioning.
+
+\paragraph{Advantages of CFG:}
+\begin{itemize}
+    \item No external classifier needed
+    \item Faster and more stable
+    \item Enables semantic class mixing during generation by blending one-hot vectors
+\end{itemize}
+\subsection*{3. Key Implementation Steps}
+
+\paragraph{For Classifier Guidance:}
+\begin{enumerate}
+    \item Build a classifier that works on noisy images at any timestep
+    \begin{itemize}
+        \item The classifier should take both noisy images and timesteps as input
+        \item Using the UNet encoder architecture is recommended
+    \end{itemize}
+    \item Train the classifier and save the weights in the appropriate location
+    \item Implement the gradient-based guidance during the sampling process
+\end{enumerate}
+
+\paragraph{For Classifier-Free Guidance:}
+\begin{enumerate}
+    \item Modify the UNet to accept one-hot encoded class labels as input
+    \begin{itemize}
+        \item Add a layer that projects the labels to the time embedding dimension
+    \end{itemize}
+    \item Combine the label embedding with the time embedding
+    \item Implement the training algorithm that randomly discards labels:
+    \begin{itemize}
+        \item With probability $p_{\text{uncond}}$, replace the label with null ($\emptyset$)
+        \item Train the model to predict the noise based on the noisy image, timestep, and (possibly dropped) label
+    \end{itemize}
+    \item Implement the sampling procedure that combines conditional and unconditional predictions
+\end{enumerate}
+
+\subsection*{4. Quantitative Evaluation with FID}
+
+Fréchet Inception Distance (FID) is a metric used to measure the similarity between generated and real images in the feature space of an Inception model.
+
+It compares the mean and covariance of real vs fake distributions:
+
+\[
+\text{FID} = \|\mu_r - \mu_g\|^2 + \text{Tr}(\Sigma_r + \Sigma_g - 2(\Sigma_r \Sigma_g)^{1/2})
+\]
+
+Where $\mu_r$, $\mu_g$ are the mean feature vectors and $\Sigma_r$, $\Sigma_g$ are the covariance matrices for real and generated images, respectively.
+
+\paragraph{Best practices for FID evaluation:}
+\begin{itemize}
+    \item Evaluate FID on the same dataset split (should be near 0)
+    \item Test with pure noise (should give very high FID)
+    \item Compare CG vs CFG scores to evaluate generation quality vs controllability
+\end{itemize}
+
+\subsection*{5. Comparison of Approaches}
+
+\begin{table}[h!]
+\centering
+\begin{tabular}{|l|l|l|}
+\hline
+\textbf{Aspect} & \textbf{Classifier Guidance} & \textbf{Classifier-Free Guidance} \\
+\hline
+Architecture & Separate classifier + DDPM & Single conditional model \\
+\hline
+Training & Train two models separately & Train one model with label dropout \\
+\hline
+Sampling & Use classifier gradients & Combine conditional/unconditional outputs \\
+\hline
+Advantages & Powerful control & Simpler, faster, enables class mixing \\
+\hline
+Disadvantages & Extra compute, needs accurate classifier & May have less precise control \\
+\hline
+\end{tabular}
+\end{table}
+\section*{6. Class Mixing (Optional)}
+One interesting capability of Classifier-Free Guidance is the ability to mix classes during generation. Since the model takes one-hot encoded vectors as input, you can create blended vectors (like $0.7 \cdot$ [\texttt{human}] $+ 0.3 \cdot$ [\texttt{food}]) to generate images with mixed characteristics.
+
+\section*{Conclusion}
+Both Classifier Guidance and Classifier-Free Guidance offer effective ways to control the output of diffusion models. CG uses an external classifier’s gradients, while CFG incorporates conditioning directly into the diffusion model. The FID metric allows for quantitative comparison between these approaches, helping to determine which performs better for specific generation tasks.
+
+Understanding these guidance techniques is crucial for creating controllable generative models that can produce high-quality images from specific categories or with desired attributes.

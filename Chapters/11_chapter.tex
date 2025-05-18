@@ -1,0 +1,193 @@
+\chapterimage{head2.png} % Chapter heading image
+\chapter{\normalsize Lecture 10: Fairness }
+
+\section*{Algorithmic Fairness: Key Concepts for Your Oral Exam}
+
+Based on Professor Aasa Feragen's slides on Algorithmic Fairness, this guide summarizes key definitions, distinctions, and sources of bias.
+
+\subsection*{1. Key Definitions and Distinctions}
+
+\subsubsection*{Core Fairness Concepts}
+\begin{itemize}
+    \item \textbf{Algorithmic fairness}: Aims to reduce unwanted bias by enforcing different notions of fairness
+    \item \textbf{Three main fairness criteria:}
+    \begin{itemize}
+        \item \textbf{Independence}: Equal acceptance rates across groups
+        \item \textbf{Separation}: Equal TPR, FPR, TNR, FNR across groups
+        \item \textbf{Sufficiency}: Equal positive/negative predictive value (i.e., given a prediction, equal probability it's true)
+    \end{itemize}
+\end{itemize}
+
+\subsubsection*{Understanding Bias}
+\begin{itemize}
+    \item \textbf{What bias is NOT}: Over/under-representation isn't inherently bias (e.g., breast cancer being more prevalent in women)
+    \item \textbf{What bias IS}: ``Data and algorithmic bias refers to systematic errors that differ between groups''
+    \item \textbf{Types of bias:}
+    \begin{itemize}
+        \item Outcome label bias (incorrect ground truth)
+        \item Representational bias (imbalanced training data)
+        \item Measurement bias (using inappropriate proxies)
+        \item Algorithmic amplification (models exaggerating existing patterns)
+    \end{itemize}
+\end{itemize}
+\section*{2. Case Studies of Algorithmic Bias}
+
+\subsection*{COMPAS Criminal Risk Assessment}
+\begin{itemize}
+    \item Racial bias in predicting risk of re-offense among US criminals
+    \item ProPublica investigation showed disparate impact for Black defendants
+    \item Proxy variable for criminality (previous verdicts) was itself biased
+\end{itemize}
+
+\subsection*{Google Photos Misclassification}
+\begin{itemize}
+    \item Algorithm incorrectly labeled Black people as gorillas
+    \item Root cause: poor model robustness and uncertainty handling
+    \item Demonstrates risks of using algorithms outside training domain
+\end{itemize}
+
+\subsection*{Healthcare Algorithm Bias}
+\begin{itemize}
+    \item Algorithm falsely concluded Black patients were healthier than equally sick White patients
+    \item Problem: algorithm used healthcare costs as a proxy for health needs
+    \item Less money spent on Black patients with same level of need created biased labels
+\end{itemize}
+
+\subsection*{Gender Bias in Medical Imaging}
+\begin{itemize}
+    \item Diagnostic accuracy for conditions like pneumothorax varied by gender
+    \item Accuracy depended on gender representation in training data
+    \item Sometimes complex: ``I thought I knew the cause of bias -- but it wasn't that simple!''
+    \item Larrazabal et al.\ (PNAS 2020) showed the best model for women still performed better for men
+\end{itemize}
+
+\subsection*{Biases in Text-to-Image Generation Models}
+\begin{itemize}
+    \item Generated images reflect and sometimes amplify social stereotypes
+    \item Occupational stereotypes: software developers shown as men, flight attendants as women
+    \item Racial biases in depictions of ``terrorists,'' ``thugs,'' etc.
+    \item Personality trait associations with gender (study by Girrbach et al., 2025)
+\end{itemize}
+\section*{3. Technical Approaches to Measure and Mitigate Bias}
+
+\subsection*{Bias Detection}
+\begin{itemize}
+    \item Visualizing disparities in error rates across groups
+    \item Measuring differences in outcomes across protected attributes
+    \item Using XAI to help identify sources of bias (DeGrave et al., 2021)
+\end{itemize}
+
+\subsection*{Debiasing Text-to-Image Models}
+
+\textbf{Debiasing text embeddings:}
+\begin{itemize}
+    \item Orthogonal projection to remove biased directions
+    \item Calibration with positive pairs (e.g., ``a photo of a male doctor'' $\approx$ ``a photo of a doctor'')
+\end{itemize}
+
+\textbf{Soft prompt optimization:}
+\begin{itemize}
+    \item Finetuning just a few tokens (5) can significantly reduce gender bias
+\end{itemize}
+
+\textbf{Model finetuning:}
+\begin{itemize}
+    \item Distributional alignment loss to steer outputs toward target distributions
+\end{itemize}
+
+\subsection*{Trade-offs in Debiasing}
+\begin{itemize}
+    \item Debiasing can sometimes backfire (Google Gemini example)
+    \item Risk of overcorrection leading to historically inaccurate outputs
+    \item Balance between fixing bias and preserving accuracy
+\end{itemize}
+\section*{4. Critical Insights and Reflections}
+
+\subsection*{Algorithms vs. Human Bias}
+\begin{itemize}
+    \item ``Algorithms are new, bias is not''
+    \item Algorithmic bias easier to detect than human bias
+    \item AI/ML can potentially help identify existing biases in systems
+    \item ``Algorithms come with potential for early discovery of bias''
+\end{itemize}
+
+\subsection*{Context-Dependent Fairness}
+\begin{itemize}
+    \item No universal definition of fairness
+    \item Appropriateness of fairness criteria depends on context:
+    \begin{itemize}
+        \item CV screening with photos
+        \item Face recognition
+        \item Diagnosing cancer
+    \end{itemize}
+\end{itemize}
+
+\subsection*{Complex Sources of Bias}
+\begin{itemize}
+    \item Multiple potential sources: data imbalance, proxy variables, label errors
+    \item Sometimes the causes aren't obvious
+    \item Need for comprehensive approach to bias mitigation
+\end{itemize}
+
+\subsection*{Generative AI Challenges}
+\begin{itemize}
+    \item More complex fairness considerations than predictive models
+    \item ``So many more ways for bias to take effect -- harder to measure''
+    \item Open question of how to generalize fairness definitions to generative AI
+\end{itemize}
+\section*{5. Exam-Style Questions and Answers}
+
+\textbf{Q1: What are the three main notions of algorithmic fairness, and how do they differ?}
+
+\textbf{A1:} The three main notions are:
+\begin{itemize}
+    \item \textbf{Independence:} Equal acceptance rates across groups (regardless of true outcomes)
+    \item \textbf{Separation:} Equal error rates (TPR, FPR, TNR, FNR) across groups
+    \item \textbf{Sufficiency:} Equal predictive values (given a prediction, equal probability it's true)
+\end{itemize}
+They differ in what conditional probabilities they equalize and which aspects of fairness they prioritize.
+
+\vspace{0.3cm}
+\textbf{Q2: How did bias manifest in the healthcare algorithm case study?}
+
+\textbf{A2:} The algorithm used healthcare costs as a proxy for health needs. Since historically less money was spent on Black patients with the same level of need, the algorithm falsely concluded Black patients were healthier than equally sick White patients, reducing the number of Black patients identified for extra care by more than half.
+
+\vspace{0.3cm}
+\textbf{Q3: Why is representation in training data important for model fairness?}
+
+\textbf{A3:} Poor representation leads to poor performance for underrepresented groups. The Larrazabal study showed that diagnostic accuracy for pneumothorax in chest X-rays varied with gender representation in the training data. Models trained predominantly on men's X-rays performed worse on women, and vice versa.
+
+\vspace{0.3cm}
+\textbf{Q4: What is the difference between bias in predictive AI and generative AI?}
+
+\textbf{A4:} While both have similar sources of bias (training data, proxies, etc.), generative AI presents more challenges because:
+\begin{itemize}
+    \item There are many more ways bias can manifest
+    \item It's harder to measure and quantify bias in generated content
+    \item The output space is much larger and more subjective
+    \item The relationship between bias and societal harm may be more complex
+\end{itemize}
+
+\vspace{0.3cm}
+\textbf{Q5: How can biased proxy variables lead to algorithmic discrimination?}
+
+\textbf{A5:} Biased proxies create biased labels, which produce biased models. In the healthcare case, using costs as a proxy for health needs incorporated historical spending disparities. In COMPAS, using previous verdicts as a proxy for criminality incorporated historical judicial biases. These proxies encode historical discrimination into the algorithm's predictions.
+
+\vspace{0.3cm}
+\textbf{Q6: Explain why algorithmic bias can sometimes be easier to detect than human bias.}
+
+\textbf{A6:} Algorithms make systematic, consistent decisions that can be analyzed across many cases. We can directly measure performance differences across groups, visualize disparities, and identify patterns that might be missed in individual human decisions. Because algorithms are built on data, we can also analyze that data before deployment to detect potential issues.
+\section*{6. Take-Away Messages}
+
+As summarized in the final slide:
+
+\begin{enumerate}
+    \item Using AI outside the training domain is risky
+    \item Bias in data gives bias in models
+    \item Algorithmic bias is easy to detect (at least in predictive models)
+    \item You can get biased models even if you ``do it all right''
+    \item Debiasing is nontrivial and not well defined
+    \item Across the board: Be cautious, react to odd AI behavior
+\end{enumerate}
+
+\textbf{Good luck with your exam!} These concepts demonstrate how algorithmic fairness sits at the intersection of technical implementation, ethical considerations, and societal impact.

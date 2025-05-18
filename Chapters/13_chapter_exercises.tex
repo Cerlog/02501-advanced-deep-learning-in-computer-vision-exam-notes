@@ -1,0 +1,128 @@
+\chapterimage{head2.png} % Chapter heading image
+\chapter{\normalsize Exercise 2}
+
+\section*{Vision Transformers (ViTs) for Image Classification: Exercise 1.2 Guide}
+
+\subsection*{1. Conceptual Foundations of Vision Transformers}
+
+\subsubsection*{The Patching Mechanism}
+
+\textbf{Intuitive Explanation:} In CNNs, we process images using sliding windows (convolutions) that gradually build up features. ViTs take a completely different approach -- they simply cut the image into a grid of non-overlapping patches, similar to dividing a photo into equal squares. It's like converting an image into a ``sequence of image words'' that can be processed by a transformer.
+
+\textbf{Technical Summary:} The patching mechanism divides an input image of shape (H, W, C) into 
+\[
+N = \frac{H \times W}{P \times P}
+\]
+non-overlapping patches, each of size (P, P, C), where $P$ is the patch size. This eliminates the inductive bias of local spatial relationships inherent in CNNs, allowing the model to learn relationships between any patches regardless of spatial distance.
+
+\subsubsection*{Patch Embeddings}
+
+\textbf{Intuitive Explanation:} After cutting an image into patches, we need to convert each patch into a format the transformer can understand -- a vector of numbers. The patch embedding is like a translator that converts raw pixel values into meaningful feature representations.
+
+\textbf{Technical Summary:} Patch embeddings are implemented as a linear projection that maps each flattened patch of dimension $P^2 \times C$ to an embedding dimension $D$. This is typically implemented as a single linear layer with weight matrix of shape $(P^2 \times C, D)$. This is analogous to token embeddings in NLP transformers and serves as the first stage of feature extraction.
+
+\subsubsection*{Transformer Encoder Blocks}
+
+\textbf{Intuitive Explanation:} Each transformer block allows patches to ``communicate'' with each other (via self-attention) and then ``think'' about what they've learned (MLP). Layer normalization keeps values in a reasonable range, while residual connections allow information to flow directly from earlier layers.
+
+\textbf{Technical Summary:}
+\begin{itemize}
+    \item \textbf{Self-attention:} Allows each patch to attend to all other patches using query-key-value projections.
+    \item \textbf{MLP (Feed-forward Network):} Two-layer network (expansion factor typically 4$\times$) with GELU activation.
+    \item \textbf{Layer Normalization:} Stabilizes training by normalizing features.
+    \item \textbf{Residual Connections:} Connect input and output of each sub-block to mitigate vanishing gradients.
+\end{itemize}
+\subsubsection*{Positional Encoding}
+
+\textbf{Intuitive Explanation:} Since transformer attention has no built-in sense of space or order, we need to explicitly tell it where each patch comes from in the original image. Positional encoding is like adding spatial coordinates to each patch.
+
+\textbf{Technical Summary:}
+\begin{itemize}
+    \item \textbf{Sinusoidal (Fixed) Encoding:} Uses sine and cosine functions of different frequencies
+    \item \textbf{Learnable Encoding:} Initialized randomly and optimized during training
+    \item Both are added directly to patch embeddings before being fed to transformer blocks
+\end{itemize}
+
+\subsubsection*{Attention Map Visualization}
+
+\textbf{Intuitive Explanation:} Attention maps show which parts of an image the model is focusing on when making decisions. They reveal whether the model is looking at relevant image regions or getting distracted.
+
+\textbf{Technical Summary:} Attention maps represent the weight matrices from self-attention, showing how much each patch attends to every other patch. Different attention heads often specialize in different semantic aspects, which can be visualized as heatmaps overlaid on the original image.
+
+\subsubsection*{ViT vs CNNs}
+
+\textbf{Intuitive Explanation:} CNNs are like experts focused on local details who gradually build up to seeing the bigger picture. ViTs are like generalists who immediately consider relationships between all parts of an image. This makes ViTs potentially more powerful but also more data-hungry.
+
+\textbf{Technical Summary:}
+\begin{itemize}
+    \item \textbf{Inductive Biases:} CNNs have strong biases (locality, translation equivariance). ViTs have minimal inductive biases.
+    \item \textbf{Data Efficiency:} CNNs typically require less data due to their built-in assumptions about images.
+    \item \textbf{Global Context:} ViTs capture global dependencies from the first layer through self-attention.
+    \item \textbf{Computational Complexity:} Self-attention scales quadratically with sequence length, while convolutions scale linearly with image size.
+\end{itemize}
+\subsection*{ViT Architecture Structure}
+
+The Vision Transformer in \texttt{vit.py} follows this structure:
+
+\begin{enumerate}
+    \item \textbf{Input Layer:} Images $\rightarrow$ patches $\rightarrow$ embedded tokens
+    \item \textbf{Class Token:} Optional prepended learnable token for classification
+    \item \textbf{Positional Embeddings:} Added to token embeddings
+    \item \textbf{Transformer Blocks:} Series of self-attention and MLP layers with residuals
+    \item \textbf{Pooling Layer:} Aggregates information (CLS token, mean, or max pooling)
+    \item \textbf{Classification Head:} Final linear projection to class logits
+\end{enumerate}
+
+The encoder blocks follow the standard transformer architecture with self-attention, MLP, layer normalization, and residual connections.
+
+\subsection*{Training and Evaluation Framework}
+
+The \texttt{imageclassification.py} implements:
+
+\begin{enumerate}
+    \item \textbf{Data Preparation:} Loads CIFAR10, selects two classes (cat and horse by default)
+    \item \textbf{Model Initialization:} Configures a ViT with appropriate parameters
+    \item \textbf{Training Loop:} Uses AdamW optimizer with learning rate warmup
+    \item \textbf{Evaluation:} Computes validation accuracy and loss after each epoch
+\end{enumerate}
+
+\subsection*{Effect of Key Hyperparameters}
+
+\begin{tabular}{|l|p{10cm}|}
+\hline
+\textbf{Parameter} & \textbf{Effect} \\
+\hline
+\textbf{Patch Size} & Smaller (2x2): More detail but higher computation. Larger (8x8): More efficient but less detail. \\
+\hline
+\textbf{Embedding Dim} & Larger: More capacity but potential overfitting. Smaller: Fewer parameters but limited capacity. \\
+\hline
+\textbf{Number of Heads} & More heads: Capture diverse relationships. Fewer heads: Simpler with fewer parameters. \\
+\hline
+\textbf{Number of Layers} & Deeper models: More capacity but harder to train. Shallower models: Less overfitting but limited capacity. \\
+\hline
+\textbf{Positional Encoding} & Fixed: More general. Learnable: Dataset-specific but potential overfitting. \\
+\hline
+\end{tabular}
+\section*{5. Summary for Exam and Report}
+
+\subsection*{Key Learning Outcomes}
+\begin{itemize}
+    \item ViTs process images as \textbf{sequences of patches} rather than using convolutions
+    \item ViTs capture \textbf{global context from the first layer}, unlike CNNs
+    \item ViTs typically require \textbf{more data} than CNNs due to fewer inductive biases
+    \item \textbf{Multi-head attention} allows different heads to focus on different image aspects
+    \item \textbf{Positional encodings} are crucial for spatial understanding
+    \item ViTs offer more \textbf{architectural flexibility} in scaling
+\end{itemize}
+
+\subsection*{Example Exam Questions}
+\begin{enumerate}
+    \item \textbf{Why does ViT require more data than a CNN?} \\
+    \textbf{Answer:} ViTs lack the inductive biases of CNNs (locality, translation equivariance) that provide prior knowledge about images. Without these biases, ViTs must learn spatial relationships from scratch, requiring more examples.
+    
+    \item \textbf{How do attention heads differ from convolutional filters?} \\
+    \textbf{Answer:} Convolutional filters have fixed receptive fields and apply the same transformation across the image. Attention heads can dynamically focus on any part of the image regardless of distance, and their weights are input-dependent rather than fixed.
+    
+    \item \textbf{How do positional embeddings impact classification performance?} \\
+    \textbf{Answer:} Without positional embeddings, the model would treat patches as an unordered set, losing all spatial information. Positional embeddings help the model understand spatial arrangements and relationships between object parts --- crucial for accurate classification.
+\end{enumerate}

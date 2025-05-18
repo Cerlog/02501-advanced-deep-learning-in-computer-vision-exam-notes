@@ -1,0 +1,103 @@
+\chapterimage{head2.png} % Chapter heading image
+\chapter{\normalsize Exercise 1}
+
+\section*{ADLCV Exercise 1: Implementing a Transformer for Sentiment Classification}
+
+I'll help you understand the theory and implementation details of this transformer exercise for sentiment classification on IMDB reviews.
+
+\subsection*{1. Exercise Overview}
+
+Based on the provided documents, the exercise focuses on building a transformer model for sentiment classification of IMDB movie reviews. The main tasks are:
+
+\begin{enumerate}
+    \item Complete the attention module implementation
+    \item Complete the positional encoding implementation
+    \item Train and evaluate the model on IMDB reviews
+    \item Analyze how different model choices affect performance
+    \item Optional: Implement a CLS token pooling strategy
+    \item Optional: Implement learnable positional encoding
+    \item Optional: Fine-tune a pre-trained BERT model
+\end{enumerate}
+
+\section*{2. Core Concepts for Understanding Transformers}
+
+\subsection*{Transformer Architecture}
+The transformer model in this exercise follows the original architecture from \emph{``Attention Is All You Need''} with some simplifications for classification:
+
+\begin{itemize}
+    \item \textbf{Encoder-only design}: Unlike the original encoder-decoder architecture for translation
+    \item \textbf{Token embeddings}: Convert discrete tokens to continuous vector representations
+    \item \textbf{Positional encoding}: Add position information (since transformers have no inherent sequence awareness)
+    \item \textbf{Multi-head attention}: Parallel attention mechanisms for capturing different aspects of the input
+    \item \textbf{Encoder blocks}: Combining attention, normalization, and feedforward layers with residual connections
+    \item \textbf{Classification head}: Final layer to convert sequence representations to sentiment prediction
+\end{itemize}
+
+\subsection*{Self-Attention Mechanism}
+The attention mechanism is the core innovation of transformers:
+
+\begin{itemize}
+    \item Computes interactions between all pairs of tokens in the sequence
+    \item Each token can ``attend'' to all other tokens with different weights
+    \item The mechanism uses queries (Q), keys (K), and values (V) projections
+    \item Attention weights are computed as: $\text{softmax}(QK^\top / \sqrt{d_k})$
+    \item Multi-head attention runs multiple attention mechanisms in parallel
+\end{itemize}
+
+\subsection*{Positional Encoding}
+Since transformers process all tokens simultaneously (not sequentially):
+
+\begin{itemize}
+    \item Positional information must be explicitly added
+    \item \textbf{Fixed sinusoidal encoding}: Uses sine/cosine functions of different frequencies
+    \item Each position gets a unique encoding that follows mathematical patterns
+    \item \textbf{Learnable encoding}: Position embeddings learned during training
+\end{itemize}
+\section*{Understanding Attention Mechanism}
+
+\subsection*{Q: Why is self-attention crucial for transformers?}
+A: Self-attention allows each token to directly attend to all other tokens in the sequence, capturing long-range dependencies that would be difficult with RNNs. It enables parallel processing (unlike sequential RNNs) and creates context-aware representations by weighting the importance of different tokens for each position.
+
+\subsection*{Q: What's the purpose of multi-head attention?}
+A: Multi-head attention allows the model to:
+\begin{itemize}
+    \item Attend to information from different representation subspaces
+    \item Capture different types of relationships (syntactic, semantic, etc.)
+    \item Increase model's representation power
+    \item Learn patterns at different positions simultaneously
+\end{itemize}
+
+\section*{Positional Encoding}
+
+\subsection*{Q: Why do transformers need explicit positional encoding?}
+A: Unlike RNNs, transformers process all tokens in parallel with no inherent notion of sequence order. Positional encodings inject information about token positions, allowing the model to consider the order of words, which is crucial for language understanding.
+
+\subsection*{Q: Explain the advantages of sinusoidal positional encoding.}
+A: Sinusoidal encoding:
+\begin{itemize}
+    \item Provides a unique pattern for each position
+    \item Allows the model to generalize to sequence lengths not seen during training
+    \item Creates smooth transitions between positions
+    \item Enables the model to easily compute relative positions through linear combinations
+\end{itemize}
+
+\section*{Model Architecture Choices}
+
+\subsection*{Q: How do different pooling strategies affect classification performance?}
+A:
+\begin{itemize}
+    \item Mean pooling averages all token representations, treating all tokens equally
+    \item Max pooling captures the most salient features across the sequence
+    \item CLS token pooling learns a special token that aggregates sequence information
+    \item The best choice depends on the task: CLS often works well for classification when properly trained
+\end{itemize}
+
+\subsection*{Q: How does the number of layers affect transformer performance?}
+A: More layers:
+\begin{itemize}
+    \item Increase model capacity and ability to learn complex patterns
+    \item Allow hierarchical feature learning
+    \item May lead to overfitting on smaller datasets
+    \item Require more computational resources
+    \item Can face optimization challenges (vanishing/exploding gradients)
+\end{itemize}

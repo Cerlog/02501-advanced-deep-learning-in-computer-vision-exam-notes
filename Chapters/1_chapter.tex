@@ -1,0 +1,195 @@
+\chapterimage{head2.png} % Chapter heading image
+\chapter{\normalsize Lecture 1: Transformers, Attention and Encoders}
+
+
+
+\section{Sequence-to-Sequence Models \& Limitations of RNNs}
+
+\subsection*{RNNs limitations (critical to understand):}
+\begin{itemize}
+    \item Cannot be trained in parallel (sequential processing)
+    \item Past information influence is quickly lost over time
+    \item Difficult to train due to vanishing/exploding gradients
+    \item Formula chain for backpropagation:
+    \[
+    \frac{\partial h_t}{\partial h_0} = \left(\frac{\partial h_t}{\partial h_{t-1}}\right) \left(\frac{\partial h_{t-1}}{\partial h_{t-2}}\right) \cdots \left(\frac{\partial h_1}{\partial h_0}\right)
+    \]
+\end{itemize}
+
+
+\section{Transformer Architecture}
+
+\subsection*{Core innovation:}
+Relies entirely on attention mechanisms without recurrence or convolutions
+
+\subsection*{Structure:}
+Encoder-Decoder architecture with multiple identical layers
+
+\subsection*{Key components:}
+\begin{itemize}
+    \item Self-attention mechanism
+    \item Multi-head attention
+    \item Positional encoding
+    \item Feed-forward networks
+    \item Add \& Norm (residual connections + layer normalization)
+\end{itemize}
+
+\section{Self-Attention Mechanism}
+
+\subsection*{Key equation:}
+\[
+\text{Attention}(Q, K, V) = \text{softmax}\left(\frac{QK^T}{\sqrt{d_k}}\right)V
+\]
+
+\subsection*{Components:}
+\begin{itemize}
+    \item \textbf{Q (Query)}: What we're looking for
+    \item \textbf{K (Key)}: What we match against
+    \item \textbf{V (Value)}: What we retrieve
+\end{itemize}
+
+\subsection*{Properties:}
+Permutation-equivariant (needs positional encoding for order)
+
+\begin{example}
+\begin{quote}
+\textit{"The animal didn't cross the street because it was too tired,"} self-attention helps \textbf{"it"} attend to \textbf{"animal"}
+\end{quote}
+\end{example}
+
+\section{Multi-Head Attention}
+
+\subsection*{Purpose:}
+Allows the model to jointly attend to information from different representation subspaces
+
+\subsection*{Process:}
+\begin{enumerate}
+    \item Project input into multiple sets of Q, K, V
+    \item Perform attention on each set independently
+    \item Concatenate results and project back to original dimension
+\end{enumerate}
+
+\subsection*{Formula:}
+\[
+\text{MultiHead}(Q, K, V) = \text{Concat}(\text{head}_1, \ldots, \text{head}_h) W^O
+\]
+\[
+\text{where head}_i = \text{Attention}(Q W_i^Q, K W_i^K, V W_i^V)
+\]
+
+\section{Positional Encoding}
+
+\subsection*{Purpose:}
+Add sequence order information since transformer processes tokens in parallel
+
+\subsection*{Original implementation:}
+\begin{itemize}
+    \item $\text{PE(pos, 2i)} = \sin\left(\frac{\text{pos}}{10000^{\frac{2i}{d_{\text{model}}}}}\right)$
+    \item $\text{PE(pos, 2i+1)} = \cos\left(\frac{\text{pos}}{10000^{\frac{2i}{d_{\text{model}}}}}\right)$
+\end{itemize}
+
+\subsection*{Alternative:}
+Learnable positional encodings (\texttt{nn.Parameter})
+
+\subsection*{Application:}
+Added to input embeddings before feeding to the model
+
+\section{Transformer for Classification}
+
+\subsection*{Architecture modifications:}
+\begin{enumerate}
+    \item Remove Transformer Decoder
+    \item Add pooling at the Encoder output (avgpool or [CLS] token)
+    \item Add a simple Linear Layer as ``decoder''
+\end{enumerate}
+
+\subsection*{[CLS] token approach:}
+Special token that aggregates sequence information through self-attention
+
+
+\section{BERT Overview}
+
+\begin{itemize}
+    \item \textbf{Full name:} Bidirectional Encoder Representations from Transformers
+    \item \textbf{Pre-training tasks:}
+    \begin{itemize}
+        \item Masked Language Modeling (MLM)
+        \item Next Sentence Prediction (NSP)
+    \end{itemize}
+    \item \textbf{Fine-tuning:} Add task-specific layers for classification, NER, etc.
+\end{itemize}
+
+\section*{Visual Explanations \& Examples to Remember}
+
+\begin{enumerate}
+    \item \textbf{YouTube Search as Q-K-V analogy:}
+    \begin{itemize}
+        \item Query: What you type in search bar
+        \item Keys: Video metadata in database
+        \item Values: The videos themselves
+    \end{itemize}
+    
+    \item \textbf{Self-attention visualization} showing how words relate to each other:
+    \begin{quote}
+        Example: "The animal didn't cross the street because it was too tired" where \textbf{"it"} strongly attends to \textbf{"animal"}
+    \end{quote}
+    
+    \item \textbf{Positional encoding heatmap:} Shows sine/cosine patterns that encode position information
+\end{enumerate}
+
+\section*{Key Connections to Emphasize}
+
+\begin{enumerate}
+    \item \textbf{RNNs $\rightarrow$ Transformers:} Transformers solve RNN limitations by replacing sequential processing with parallel attention
+    \item \textbf{Self-attention $\rightarrow$ Multi-head attention:} Multi-head allows model to focus on different aspects of input simultaneously
+    \item \textbf{Transformer $\rightarrow$ BERT:} BERT is essentially a pre-trained transformer encoder with specific training objectives
+    \item \textbf{Attention $\rightarrow$ Classification:} How self-attention allows aggregation of information for classification tasks
+\end{enumerate}
+
+\section*{Quiz Questions for Self-Testing}
+
+\begin{enumerate}
+    \item \textbf{Q:} What is the primary advantage of transformer architecture over RNNs?\\
+    \textbf{A:} Parallel processing of input sequences, allowing for more efficient training and better capture of long-range dependencies.
+
+    \item \textbf{Q:} Why do we divide by $\sqrt{d_k}$ in the attention formula?\\
+    \textbf{A:} To prevent the dot products from growing too large in magnitude, which would lead to extremely small gradients during backpropagation.
+
+    \item \textbf{Q:} Explain the difference between "permutation-equivariant" and "permutation-invariant".\\
+    \textbf{A:} Permutation-equivariant means the output changes in a corresponding way when the input order changes. Permutation-invariant means the output remains the same regardless of input order. Self-attention is permutation-equivariant.
+
+    \item \textbf{Q:} Why is positional encoding necessary in transformers?\\
+    \textbf{A:} Since transformers process all tokens in parallel with self-attention (which is permutation-equivariant), they need positional encoding to capture sequence order information.
+
+    \item \textbf{Q:} How does the [CLS] token approach differ from average pooling for classification?\\
+    \textbf{A:} The [CLS] token learns to aggregate sequence information through self-attention, while average pooling simply takes the mean of all token representations.
+
+    \item \textbf{Q:} What are the components of a typical transformer encoder layer?\\
+    \textbf{A:} Multi-head self-attention, Add \& Norm (residual connection and layer normalization), Feed-forward network, and another Add \& Norm.
+\end{enumerate}
+
+\vspace{1em}
+
+\section*{Often Overlooked Details Examiners May Ask About}
+
+\begin{enumerate}
+    \item \textbf{Scaling factor in attention:} The $\sqrt{d_k}$ term is crucial for gradient stability and often overlooked.
+
+    \item \textbf{Feed-forward networks in transformers:} These are applied position-wise and typically expand dimension then contract:
+    \[
+    \text{FFN}(x) = \max(0, xW_1 + b_1)W_2 + b_2
+    \]
+
+    \item \textbf{Masked self-attention in decoder:} Ensures predictions only depend on known outputs during training.
+
+    \item \textbf{Implementation of multi-head attention:} Involves splitting dimensions rather than separate passes through the attention mechanism.
+
+    \item \textbf{Residual connections:} Critical for training deep transformer networks by helping gradient flow.
+
+    \item \textbf{Layer normalization vs. batch normalization:} Transformers use layer norm which normalizes across features rather than batch examples.
+
+    \item \textbf{Computational complexity of self-attention:} $\mathcal{O}(n^2d)$ where $n$ is sequence length and $d$ is embedding dimension – quadratic in sequence length.
+\end{enumerate}
+
+\textbf{Note:} Examiners often ask you to derive or explain the attention mechanism in detail, so be prepared to write out the formula and explain each component's purpose!
+

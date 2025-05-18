@@ -1,0 +1,190 @@
+\chapterimage{head2.png} % Chapter heading image
+\chapter{\normalsize Lecture 9: Explainable AI}
+
+\section*{Explainable AI (XAI) in Computer Vision: Exam Preparation Guide}
+
+\subsection*{Core Concepts and Motivations}
+
+\textbf{What is XAI?} \\
+XAI focuses on answering \textit{"What caused my prediction?"} — making AI decision-making processes transparent and understandable to humans. The lecture by Aasa Feragen outlines several approaches to this challenge, specifically in computer vision.
+
+\subsubsection*{Key motivations for XAI:}
+\begin{itemize}
+    \item \textbf{Utility and user trust} – predictions are more useful when users understand them
+    \item \textbf{Accountability} – decisions that cannot be explained may not be suitable for critical applications
+\end{itemize}
+
+\textbf{The counterfactual perspective:} A significant portion of the lecture focuses on counterfactual explanations, which answer the question: \textit{"How should I change the input to obtain a different classification?"} This represents a key paradigm in XAI for computer vision.
+
+\subsection*{XAI Methods and Techniques}
+
+\subsubsection*{1. Saliency-Based Methods}
+
+\textbf{Saliency maps:}
+\begin{itemize}
+    \item Create heatmaps highlighting regions of the image most important for predictions
+    \item \textbf{Example:} Medical image classification (slide 7) showing pneumonia detection
+\end{itemize}
+
+\textbf{Vanilla gradient saliency:}
+\begin{itemize}
+    \item Computes the gradient of output with respect to input pixels
+    \item \textbf{Limitation:} Tends to be ``noisy'' due to classifiers not being smooth over images
+\end{itemize}
+
+\textbf{SmoothGrad:}
+\begin{itemize}
+    \item Improves saliency maps by adding Gaussian noise to the image
+    \item Ironically ``removes noise by adding noise''
+    \item Creates more coherent, interpretable heatmaps
+\end{itemize}
+
+\subsubsection*{2. Feature Attribution Methods}
+
+\textbf{Class Activation Mapping (CAM):}
+\begin{itemize}
+    \item Post-hoc method that identifies important features via activation analysis
+    \item Maps activations back to input space to highlight relevant regions
+\end{itemize}
+
+\subsubsection*{2. Feature Attribution Methods (continued)}
+
+\textbf{GradCAM:}
+\begin{itemize}
+    \item Activation mapping weights computed via gradients
+    \item Uses ReLU to turn off negative contributions for more intuitive output
+    \item \textbf{Example:} The cat/dog image (slide 14) showing how different features are highlighted
+\end{itemize}
+
+\textbf{Attention-based explanations:}
+\begin{itemize}
+    \item The lecture notes that previous methods were post-hoc (added after model training)
+    \item Attention mechanisms provide intrinsic explanations (built into the model)
+\end{itemize}
+
+\subsubsection*{3. Prototype and Concept-Based Methods}
+
+\textbf{Retrieval-based explanation:}
+\begin{itemize}
+    \item Explains through examples of similar data with similar predictions
+    \item Uses nearest neighbors in representation space
+\end{itemize}
+
+\textbf{Concept bottleneck models:}
+\begin{itemize}
+    \item Uses predefined explanatory concepts that users can interact with
+    \item Trains on input $x$, concept vectors $c$, and outputs $y$
+    \item \textbf{Example:} Medical image classifier that explicitly detects concepts like ``bone spurs'' or ``sclerosis''
+\end{itemize}
+
+\textbf{Prototype-based explanation:}
+\begin{itemize}
+    \item Performs classification using similarity to learned prototypes
+    \item \textbf{Example:} Bird classification by identifying similar prototype parts across images
+\end{itemize}
+
+\subsubsection*{4. Counterfactual Explanations}
+
+\textbf{Diffusion Models for Counterfactuals:}
+\begin{itemize}
+    \item Diffusion model ensures counterfactuals stay on the data manifold
+    \item Classification loss drives the counterfactual toward target class
+    \item Perceptual loss keeps counterfactual visually similar to original image
+\end{itemize}
+
+\textbf{Adversarial Counterfactual Visual Explanations:}
+\begin{itemize}
+    \item Uses adversarial attacks to create counterfactuals
+    \item Applies diffusion model to project attacks back onto data manifold
+    \item Post-processing with inpainting to maintain similarity to original
+\end{itemize}
+\section*{Applications of XAI}
+
+\subsection*{Detecting Shortcut Learning}
+\begin{itemize}
+    \item Using counterfactuals to identify when models learn spurious correlations
+    \item \textbf{Example:} Medical imaging diagnosis based on artifacts rather than pathology
+    \item Testing how changing shortcut features affects model predictions
+\end{itemize}
+
+\subsection*{Improving Image Quality}
+\begin{itemize}
+    \item Using diffusion models to enhance image quality
+    \item \textbf{Example:} Diff-ICE method to improve ultrasound imaging
+\end{itemize}
+
+\subsection*{Attribution for Generative AI}
+\begin{itemize}
+    \item Assigning credit for creative works generated by AI
+    \item \textbf{Example:} EKILA system that identifies training images that contributed to generated art
+\end{itemize}
+
+\subsection*{Interpreting Text-to-Image Models}
+\begin{itemize}
+    \item What the DAAM: Analyzing which parts of text prompts influence image regions
+    \item Interpreting CLIP's image representation via text-based decomposition
+    \item Hidden language of diffusion models: Conceptor approach
+\end{itemize}
+\section*{Quiz Questions and Answers}
+
+\begin{enumerate}
+    \item \textbf{What are the two main motivations for XAI discussed in the lecture?} \\
+    \textbf{A1:} Utility/user trust (predictions are more useful when understood) and accountability (decisions that cannot be explained may be unsuitable for critical applications).
+
+    \item \textbf{How does SmoothGrad improve upon vanilla saliency maps?} \\
+    \textbf{A2:} SmoothGrad adds Gaussian noise to the input image multiple times, computes gradients for each noisy sample, and averages them. This produces smoother, more interpretable heatmaps by “removing noise by adding noise.”
+
+    \item \textbf{What is the difference between post-hoc and intrinsic explanation methods?} \\
+    \textbf{A3:} Post-hoc methods (like saliency maps and GradCAM) add explanations after the model is trained, while intrinsic methods (like attention mechanisms) incorporate explainability directly into the model architecture.
+
+    \item \textbf{How do diffusion models contribute to counterfactual explanations?} \\
+    \textbf{A4:} Diffusion models serve as the data compatibility term, ensuring counterfactuals remain on the data manifold (look realistic). They help generate plausible modifications that change the prediction while maintaining image coherence.
+
+    \item \textbf{What two main terms are typically included in counterfactual explanation methods?} \\
+    \textbf{A5:} A data compatibility term (keeping the counterfactual close to realistic data) and a term that drives the counterfactual toward the desired prediction or class.
+
+    \item \textbf{How can prototype-based explanations help interpret image classifications?} \\
+    \textbf{A6:} They identify which parts of the input image look similar to learned prototypes, providing an intuitive way to understand why an image belongs to a specific class (e.g., “this bird was classified as a sparrow because its beak looks like this prototype”).
+
+    \item \textbf{What practical applications of XAI beyond model understanding were discussed?} \\
+    \textbf{A7:} Detecting shortcut learning (when models learn spurious correlations), improving image quality, attribution for generative AI, and explaining text-to-image generation models.
+\end{enumerate}
+\section*{Key Insights for the Oral Exam}
+
+\subsection*{Conceptual understanding is crucial:}
+\begin{itemize}
+    \item Be prepared to explain not just how XAI methods work technically, but why they're needed
+    \item Understand the difference between explanation types (feature attribution vs. counterfactual)
+\end{itemize}
+
+\subsection*{Evolution of XAI methods:}
+\begin{itemize}
+    \item Early methods were post-hoc (saliency maps, GradCAM)
+    \item More recent methods are intrinsic (attention mechanisms) or generative (diffusion-based)
+\end{itemize}
+
+\subsection*{The role of diffusion models:}
+\begin{itemize}
+    \item Appear throughout the lecture both as subjects of explanation and tools for generating explanations
+    \item Represent an important connection between generative AI and explainability
+\end{itemize}
+
+\subsection*{Generative AI explainability:}
+\begin{itemize}
+    \item This is an emerging area with ``not that much out there'' (slide 29)
+    \item Focus on techniques like DAAM, Conceptor, and prototype extraction
+\end{itemize}
+
+\subsection*{Multiple applications beyond understanding:}
+\begin{itemize}
+    \item XAI isn't just for transparency but can improve models and enable new capabilities
+    \item Applications include detecting model biases, improving image quality, and fair attribution
+\end{itemize}
+
+\subsection*{The tension between performance and explainability:}
+\begin{itemize}
+    \item Complex models may perform better but be harder to explain
+    \item Concept bottleneck models and prototype-based methods attempt to bridge this gap
+\end{itemize}
+
+\textit{Remember that the lecture emphasizes both traditional predictive model explanation and newer generative AI explanation. For the oral exam, be prepared to discuss how XAI techniques are evolving to address the growing complexity of AI systems, particularly in the domain of computer vision.}

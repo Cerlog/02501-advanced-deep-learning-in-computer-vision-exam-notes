@@ -1,0 +1,255 @@
+\chapterimage{head2.png} % Chapter heading image
+\chapter{\normalsize Lecture 6: SOTA Text2Image Generation}
+
+\section{Core Concepts of Latent Diffusion Models (LDMs)}
+
+\subsection*{Problem with Traditional Diffusion Models}
+Traditional Denoising Diffusion Probabilistic Models (DDPMs) face significant limitations:
+\begin{itemize}
+    \item Limited to $\sim256\times256$ resolution images
+    \item Computationally expensive since they operate directly in pixel space
+    \item As noted in the slides: 
+    \begin{quote}
+        "Most bits of a digital image correspond to imperceptible details... gradients and neural network backbone need to be evaluated on all pixels, leading to superfluous computations."
+    \end{quote}
+\end{itemize}
+
+\subsection*{Latent Diffusion Solution}
+LDMs solve this by:
+\begin{enumerate}
+    \item \textbf{Compressing images into latent representations} using an autoencoder (VAE)
+    \item \textbf{Performing diffusion in this compressed latent space}
+    \item \textbf{Decoding back to pixel space} after the diffusion process
+\end{enumerate}
+
+\textbf{Advantages:}
+\begin{itemize}
+    \item \textbf{Efficiency:} Diffusion happens in a much smaller dimensional space
+    \item \textbf{Focus on semantics:} The latent space primarily captures meaningful image content
+\end{itemize}
+
+\subsection*{LDM Architecture Components}
+\begin{enumerate}
+    \item \textbf{Encoder (E):} Compresses image $x$ into latent representation $z$
+    \item \textbf{Latent Space:} Where diffusion occurs (forward noising process and reverse denoising)
+    \item \textbf{UNet-based Denoising Network:} Predicts noise at each denoising step
+    \item \textbf{Decoder (D):} Transforms the final latent representation back to pixel space
+    \item \textbf{Conditioning Mechanism:} Enables control through text or other modalities
+\end{enumerate}
+
+\section{Detailed Look at Latent Diffusion Model Architecture}
+
+\subsection*{Autoencoder (VAE) Component}
+The autoencoder serves two critical functions:
+\begin{itemize}
+    \item \textbf{Encoder:} Compresses high-dimensional pixel space into compact latent representation
+    \item \textbf{Decoder:} Reconstructs pixel information from latent representation after diffusion
+\end{itemize}
+
+This compression focuses on perceptually relevant features rather than pixel-perfect reconstruction, as visualized in the slides through rate-distortion curves showing the trade-off between compression and quality.
+
+\subsection*{Diffusion in Latent Space}
+The diffusion process follows these steps:
+
+\begin{enumerate}
+    \item \textbf{Forward Process:} Gradually add Gaussian noise to latent representation
+    \[
+    z_0 \rightarrow z_1 \rightarrow z_2 \rightarrow \cdots \rightarrow z_T \quad \text{(pure noise)}
+    \]
+
+    \item \textbf{Reverse Process (Denoising):}
+    \begin{itemize}
+        \item Start with random noise $z_T$
+        \item Iteratively predict and remove noise:
+        \[
+        z_T \rightarrow z_{T-1} \rightarrow \cdots \rightarrow z_1 \rightarrow z_0
+        \]
+        \item Use U-Net architecture with cross-attention mechanisms for denoising
+    \end{itemize}
+
+    \item \textbf{Key Advantage:} Operating in latent space means the diffusion model handles significantly fewer dimensions:
+    \begin{itemize}
+        \item If image is $512 \times 512 \times 3$ pixels $\approx 786$K dimensions
+        \item Latent representation might be $64 \times 64 \times 4 \approx 16$K dimensions (approx. $50\times$ reduction)
+    \end{itemize}
+\end{enumerate}
+
+\section{CLIP: The Vision-Language Model Powering Text Conditioning}
+
+\subsection*{CLIP Architecture and Training}
+CLIP consists of:
+\begin{enumerate}
+    \item \textbf{Image Encoder:} Processes images into embeddings
+    \item \textbf{Text Encoder:} Processes text prompts into embeddings
+    \item \textbf{Shared Embedding Space:} Where both modalities are aligned
+\end{enumerate}
+
+CLIP is trained using a contrastive loss approach:
+\begin{itemize}
+    \item \textbf{Goal:} Maximize similarity between paired image-text samples and minimize it for unpaired ones
+    \item \textbf{Training Data:} Large-scale image-text pairs from the internet
+    \item \textbf{Loss Function:} Each image predicts which caption matches from a batch of options
+\end{itemize}
+
+\subsection*{How CLIP Enables Zero-Shot Classification}
+As shown in slide p.37, CLIP allows zero-shot classification by:
+\begin{enumerate}
+    \item Creating text templates: \texttt{"A photo of a \{class\}"}
+    \item Computing text embeddings for all class names
+    \item Computing image embedding for the target image
+    \item Finding the text embedding with the highest similarity to the image
+\end{enumerate}
+
+\subsection*{CLIP for Text-to-Image Generation}
+CLIP’s role in text-to-image systems:
+\begin{enumerate}
+    \item Encodes text prompts into embeddings that guide the diffusion process
+    \item Provides a way to measure similarity between generated images and text descriptions
+    \item Enables classifier-free guidance by comparing conditional and unconditional generation
+\end{enumerate}
+\section{Text-to-Image Generation End-to-End (Stable Diffusion)}
+
+\subsection*{Stable Diffusion Pipeline}
+The complete text-to-image generation process:
+
+\begin{enumerate}
+    \item \textbf{Text Encoding:}
+    \begin{itemize}
+        \item Text prompt is tokenized and processed by CLIP’s text encoder
+        \item Produces text embeddings representing the desired image content
+    \end{itemize}
+    
+    \item \textbf{Latent Diffusion Process:}
+    \begin{itemize}
+        \item Start with random noise in latent space
+        \item Apply UNet-based denoising model conditioned on text embeddings
+        \item Cross-attention layers inject text information into the spatial features
+        \item Iteratively denoise until a clean latent representation is produced
+    \end{itemize}
+    
+    \item \textbf{Image Decoding:}
+    \begin{itemize}
+        \item VAE decoder transforms the clean latent representation to pixel space
+        \item Produces the final generated image matching the text description
+    \end{itemize}
+\end{enumerate}
+
+\subsection*{Cross-Attention Mechanism}
+Cross-attention is the critical component for conditioning:
+\begin{itemize}
+    \item \textbf{Query:} Features from the diffusion U-Net
+    \item \textbf{Key/Value pairs:} From text embeddings
+    \item \textbf{Formula:} $\text{Attention}(Q, K, V) = \text{softmax}(QK^\top / \sqrt{d})V$
+    \item Allows the model to selectively focus on relevant text features for each spatial location
+\end{itemize}
+
+\subsection*{Classifier-Free Guidance}
+To strengthen alignment with text:
+\begin{itemize}
+    \item Generate both conditional and unconditional latent representations
+    \item Combine them using guidance scale:
+    \[
+    z_\text{guided} = z_\text{unconditional} + \text{guidance\_scale} \cdot (z_\text{conditional} - z_\text{unconditional})
+    \]
+    \item Higher guidance scale leads to stronger adherence to text but potentially less diversity
+\end{itemize}
+\section{Key Visualizations and Examples}
+
+\subsection*{Perceptual vs. Semantic Compression}
+The slides show a rate-distortion curve (page 14) illustrating:
+\begin{itemize}
+    \item \textbf{Left side:} High distortion region (semantic compression) where LDMs operate
+    \item \textbf{Right side:} Low distortion region (perceptual compression) where traditional autoencoders operate
+    \item \textbf{Key Insight:} LDMs work because they focus on preserving semantic content rather than exact pixel values
+\end{itemize}
+
+\subsection*{Diffusion Process Visualization}
+Pages 15–16 illustrate the diffusion process:
+\begin{itemize}
+    \item \textbf{Forward process:} Original dog image gradually becomes noise
+    \item \textbf{Reverse process:} Denoising U-Net iteratively reconstructs image from noise
+\end{itemize}
+
+\subsection*{Text-to-Image Examples}
+Pages 23–26 show examples of text prompts creating different images:
+\begin{itemize}
+    \item ``Cat in Nyhavn'' with sunset conditions
+    \item ``Dog in Nørrebro streets'' with different lighting
+    \item ``Winter! Let it snow''
+    \item ``A dog on Mars'' showing the creative capabilities of the model
+\end{itemize}
+\section{Exam-Style Questions with Answers}
+
+\subsection*{Question 1: Why is operating in latent space more efficient than pixel space for diffusion models?}
+\textbf{Answer:} Diffusion in pixel space requires operating on all pixels (e.g., a 512×512 image has $\sim$786K dimensions), making it computationally expensive. Latent diffusion models first compress images to a much smaller latent representation (e.g., $64\times64\times4 \approx 16$K dimensions), reducing computational complexity by orders of magnitude. Additionally, the latent space primarily captures semantically meaningful information while discarding imperceptible details, making the diffusion process more efficient without sacrificing quality.
+
+\subsection*{Question 2: Explain how CLIP enables text-to-image generation models.}
+\textbf{Answer:} CLIP enables text-to-image generation through several mechanisms:
+\begin{enumerate}
+    \item It provides a text encoder that converts prompts into meaningful embeddings representing visual concepts
+    \item These embeddings are injected into the diffusion model’s denoising process via cross-attention mechanisms
+    \item CLIP creates a shared embedding space between text and images, allowing the model to “understand” how text descriptions correspond to visual elements
+    \item CLIP’s contrastive training on millions of image-text pairs provides rich knowledge of visual concepts described in natural language
+\end{enumerate}
+
+\subsection*{Question 3: What is cross-attention and why is it important in Latent Diffusion Models?}
+\textbf{Answer:} Cross-attention is a mechanism where the query vectors come from one domain (spatial features in the diffusion U-Net) and the key-value pairs come from another domain (text embeddings). In LDMs, cross-attention allows text information to influence the spatial features during the denoising process. The attention operation is computed as:
+\[
+\text{Attention}(Q, K, V) = \text{softmax}(QK^\top / \sqrt{d})V
+\]
+where $Q$ represents spatial queries, and $K, V$ come from text embeddings. This is crucial because it enables the precise spatially-localized influence of text concepts on the generated image, effectively translating text descriptions into visual elements at appropriate locations.
+
+\subsection*{Question 4: What is classifier-free guidance and what trade-offs does increasing the guidance strength present?}
+\textbf{Answer:} Classifier-free guidance is a technique that enhances text-image alignment by combining conditional and unconditional generation. The model produces both a text-conditioned latent representation and an unconditional one, then combines them using:
+\[
+z_\text{guided} = z_\text{unconditional} + \text{guidance\_scale} \cdot (z_\text{conditional} - z_\text{unconditional})
+\]
+
+Trade-offs when increasing guidance strength:
+\begin{itemize}
+    \item \textbf{Higher guidance:} Stronger adherence to text prompts, more accurate concept depiction
+    \item \textbf{Higher guidance:} Less diversity, more stereotypical representations
+    \item \textbf{Higher guidance:} Potentially less realistic images with exaggerated features
+    \item \textbf{Lower guidance:} More creative and diverse outputs but possibly less faithful to the text prompt
+\end{itemize}
+\section{Advanced Topics Often Overlooked}
+
+\subsection*{Memory and Efficiency Advantages}
+The slides highlight the fundamental efficiency advantage of LDMs:
+\begin{itemize}
+    \item Reduction of dimensions from $\sim$786K (pixel space) to $\sim$16K (latent space)
+    \item This allows processing of higher resolution images
+    \item Enables faster training and inference
+    \item Requires less memory during processing
+\end{itemize}
+
+\subsection*{Text-Image Alignment Challenges}
+Several challenges arise in aligning text and images:
+\begin{itemize}
+    \item Ambiguity in language (e.g., ``a cat on a mat'' has many valid visual interpretations)
+    \item Abstract concepts are difficult to visualize consistently
+    \item Bias in training data affects how concepts are represented
+    \item Compositional challenges (correctly arranging multiple objects mentioned in text)
+\end{itemize}
+
+\subsection*{Advanced Conditioning Techniques}
+Beyond basic text conditioning:
+\begin{enumerate}
+    \item \textbf{Textual Inversion} (slides 51--56): Learning custom token embeddings to represent specific concepts from just a few images
+    \item \textbf{DreamBooth} (slide 47): Fine-tuning the entire model to learn a specific subject
+    \item \textbf{ControlNet} (slide 48): Adding conditioning through pose, edges, or other structural information
+    \item \textbf{Prompt-to-Prompt} (slide 49): Precisely editing specific parts of generated images by manipulating cross-attention maps
+    \item \textbf{Instance Diffusion} (slide 50): Instance-level control for multiple objects in a scene
+\end{enumerate}
+
+\subsection*{Balancing Generation Control and Freedom}
+The slides mention ``CG/CFG is cool, but I want freedom'' (slides 21--26):
+\begin{itemize}
+    \item Highlights tension between control and creative freedom
+    \item More guidance gives better text alignment but less diverse results
+    \item Finding the right balance depends on the specific application
+    \item Different control mechanisms provide different types of control (global vs. local)
+\end{itemize}
+
+\bigskip
+This comprehensive overview covers the essential concepts, mechanisms, and nuances that would be expected in an oral exam on text-to-image generative AI models, with special focus on Latent Diffusion Models and CLIP.

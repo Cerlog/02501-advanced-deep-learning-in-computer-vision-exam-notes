@@ -1,0 +1,292 @@
+\chapterimage{head2.png} % Chapter heading image
+\chapter{\normalsize Lecture 8: Multi-Modal Learning}
+\section*{Core Concepts and Motivations}
+
+Multimodal learning is a fundamental approach in AI that integrates information from multiple modalities (like vision, text, audio) to build systems that understand and process information more comprehensively, similar to how humans perceive the world through diverse senses.
+
+\subsection*{Key Motivations}
+
+\begin{itemize}
+    \item Humans naturally perceive the world through multiple senses simultaneously (vision, hearing, touch, smell, taste, balance)
+    \item Single modality systems miss contextual information that exists across modalities
+    \item Different modalities provide complementary information that leads to richer understanding
+    \item Real-world applications often require processing multiple input types concurrently
+\end{itemize}
+
+\subsection*{Main Modalities Covered}
+
+\begin{itemize}
+    \item \textbf{Visual:} images, videos
+    \item \textbf{Textual:} natural language
+    \item \textbf{Audio:} speech, sounds
+    \item \textbf{Kinesthetic:} motion, position
+\end{itemize}
+
+\section*{Multimodal Tasks and Applications}
+
+\subsection*{Vision-Language Tasks}
+
+\begin{enumerate}
+    \item \textbf{Visual Question Answering (VQA)}
+    \begin{itemize}
+        \item \textbf{Input:} Image + text question
+        \item \textbf{Output:} Text answer about visual content
+        \item \textbf{Example:} ``What is the dog holding with its paws?'' $\rightarrow$ ``Frisbee''
+        \item Can be multiple-choice or open-ended answers
+    \end{itemize}
+
+    \item \textbf{Image Captioning}
+    \begin{itemize}
+        \item \textbf{Input:} Image
+        \item \textbf{Output:} Generated text description (sentence or paragraph)
+        \item \textbf{Process:} (1) Understanding visual content, (2) Encoding into representation, (3) Generating coherent description
+    \end{itemize}
+
+    \item \textbf{Image-Text Retrieval}
+    \begin{itemize}
+        \item \textbf{Tasks:} Text-to-image retrieval and image-to-text retrieval
+        \item \textbf{Approach:} Embedding images and text in shared semantic space
+        \item \textbf{Applications:} Finding images that match text queries or captions for images
+    \end{itemize}
+
+    \item \textbf{Visual Grounding}
+    \begin{itemize}
+        \item \textbf{Input:} Image + text phrase/query
+        \item \textbf{Output:} Bounding box/region in the image
+        \item \textbf{Types:} Phrase grounding and referring expression comprehension
+        \item \textbf{Example:} ``The red frisbee next to the dog'' $\rightarrow$ highlights object in image
+    \end{itemize}
+
+    \item \textbf{Text-to-Image Generation}
+    \begin{itemize}
+        \item Uses text prompts to condition generative models
+        \item Often employs diffusion models in latent space
+        \item Requires strong semantic alignment between modalities
+    \end{itemize}
+\end{enumerate}
+\subsection*{Video Understanding}
+
+\begin{itemize}
+    \item Combines spatial information (what's in a frame) with temporal information (how things change over time)
+    \item Two-stream convolutional networks process:
+    \begin{itemize}
+        \item \textbf{Spatial stream:} Recognizes objects and scenes in individual frames
+        \item \textbf{Temporal stream:} Captures motion via optical flow between frames
+    \end{itemize}
+\end{itemize}
+\section*{Key Architectures and Models}
+
+\subsection*{Evolution of Architectures}
+
+\textbf{Early Approaches:}
+\begin{itemize}
+    \item CNN+LSTM architectures (CNN extracts image features, LSTM processes text)
+    \item Separate encoders with simple fusion mechanisms
+\end{itemize}
+
+\textbf{Modern Approaches:}
+\begin{itemize}
+    \item Transformer-based architectures with sophisticated fusion strategies
+    \item Joint embedding spaces with multimodal attention mechanisms
+    \item Large language models enhanced with visual processing capabilities
+\end{itemize}
+
+\subsection*{Important Models and Their Innovations}
+
+\textbf{1. CLIP (Contrastive Language-Image Pre-training)}
+\begin{itemize}
+    \item Trains on image-text pairs using contrastive loss
+    \item Each image predicts which caption matches from a batch
+    \item Creates aligned visual and textual embeddings in shared space
+    \item Enables zero-shot transfer to many downstream tasks
+\end{itemize}
+
+\textbf{2. ViLT (Vision-and-Language Transformer)}
+\begin{itemize}
+    \item Eliminates need for separate object detection or region features
+    \item Directly processes image patches and text tokens
+    \item Uses transformer encoder with multimodal attention
+    \item Trained with image-text matching, masked language modeling, and word-patch alignment
+\end{itemize}
+
+\textbf{3. BLIP (Bootstrapping Language-Image Pre-training)}
+\begin{itemize}
+    \item Combines three components:
+    \begin{itemize}
+        \item Unimodal encoder (image-text contrastive loss)
+        \item Image-grounded text encoder (image-text matching)
+        \item Image-grounded text decoder (language modeling for caption generation)
+    \end{itemize}
+    \item Synthesizes and filters noisy image-text pairs during training
+\end{itemize}
+
+\textbf{4. Grounding DINO}
+\begin{itemize}
+    \item Extends closed-set object detectors to open-vocabulary scenarios
+    \item Combines vision transformer with text encoder
+    \item Feature fusion between text and image at multiple levels
+    \item Can process both predefined categories and natural language queries
+\end{itemize}
+
+\textbf{5. LLaVa and Multimodal LLMs}
+\begin{itemize}
+    \item Vision encoder + projection layer + language model
+    \item Projects visual features into language model's embedding space
+    \item Preserves LLM's generative capabilities while adding visual understanding
+    \item Represents the current trend of extending LLMs to multimodal contexts
+\end{itemize}
+\section*{Fusion Strategies}
+
+The slides demonstrate several approaches to combining information across modalities:
+
+\begin{enumerate}
+    \item \textbf{Early Fusion}
+    \begin{itemize}
+        \item Combines raw or lightly processed inputs before main processing
+        \item Allows deep interaction between modalities throughout the network
+        \item \textit{Challenge}: Modalities may have very different statistical properties
+    \end{itemize}
+    
+    \item \textbf{Late Fusion}
+    \begin{itemize}
+        \item Processes each modality separately and combines high-level features/predictions
+        \item \textit{Example}: Two-stream networks for video that fuse spatial and temporal outputs
+        \item Simpler but may miss cross-modal interactions
+    \end{itemize}
+
+    \item \textbf{Multi-level Fusion}
+    \begin{itemize}
+        \item Combines information at multiple stages in the processing pipeline
+        \item \textit{Example}: Grounding DINO with feature fusion at backbone, neck, and head levels
+    \end{itemize}
+
+    \item \textbf{Cross-Attention Mechanisms}
+    \begin{itemize}
+        \item Allows each modality to attend to relevant parts of the other
+        \item Common in transformer-based architectures like BLIP and VILT
+        \item Enables fine-grained alignment between modalities
+    \end{itemize}
+
+    \item \textbf{Joint Embedding Space}
+    \begin{itemize}
+        \item Maps different modalities to a common representational space
+        \item Enables direct comparison and retrieval across modalities
+        \item Trained with contrastive or alignment objectives (e.g., CLIP, BLIP)
+    \end{itemize}
+\end{enumerate}
+
+\section*{Pre-training Objectives and Downstream Tasks}
+
+\subsection*{Common Pre-training Objectives:}
+\begin{itemize}
+    \item Masked Language Modeling
+    \item Masked Image Modeling
+    \item Image-Text Matching (is this text related to this image?)
+    \item Image-Text Contrastive Learning (align similar pairs in embedding space)
+\end{itemize}
+
+\subsection*{Connection to Downstream Tasks:}
+\begin{itemize}
+    \item These pre-training objectives prepare models for specific multimodal applications
+    \item Different objectives benefit different downstream tasks
+    \item Most modern approaches use multiple objectives simultaneously
+\end{itemize}
+\section*{Oral Exam Quiz Questions}
+
+\subsection*{Basic Understanding}
+
+\begin{enumerate}
+    \item \textbf{Q: What is multimodal learning and why is it important?}
+    
+    \textbf{A:} Multimodal learning involves AI systems that can process and integrate information from multiple types of inputs (modalities) such as vision, text, and audio. It's important because real-world information comes in multiple forms, humans perceive the world through multiple senses, and integrating these modalities leads to richer understanding and more capable AI systems.
+
+    \item \textbf{Q: Explain the difference between early fusion and late fusion in multimodal models.}
+    
+    \textbf{A:} Early fusion combines raw inputs or low-level features from different modalities before main processing, allowing deep interaction but potentially struggling with different statistical properties. Late fusion processes each modality separately with specialized networks and only combines high-level features or predictions, which is simpler but might miss important cross-modal interactions.
+\end{enumerate}
+
+\subsection*{Architecture and Models}
+
+\begin{enumerate}
+    \setcounter{enumi}{2}
+    \item \textbf{Q: How does CLIP train image and text embeddings to align in a shared space?}
+    
+    \textbf{A:} CLIP uses contrastive learning where each image in a batch is paired with its corresponding text description. The model is trained to maximize similarity between matching image-text pairs while minimizing similarity with non-matching pairs. This creates a joint embedding space where semantically similar images and texts are close to each other, enabling cross-modal retrieval and zero-shot classification.
+
+    \item \textbf{Q: What innovative approach does VILT take compared to earlier vision-language models?}
+    
+    \textbf{A:} VILT (Vision-and-Language Transformer) eliminates the need for region-based features or separate object detection by directly processing image patches alongside text tokens in a unified transformer architecture. It uses simple linear projection of flattened patches rather than convolutional processing, making it more efficient while maintaining strong performance on vision-language tasks.
+\end{enumerate}
+\subsection*{Multimodal Applications}
+
+\begin{enumerate}
+    \setcounter{enumi}{4}
+    \item \textbf{Q: Compare and contrast Visual Question Answering (VQA) and Visual Grounding.}
+    
+    \textbf{A:} Visual Question Answering takes an image and a question as input and produces a textual answer based on understanding the visual content. Visual Grounding takes an image and a textual description and produces spatial coordinates (like a bounding box) locating the described object/region in the image. VQA requires image understanding to generate language, while grounding requires language understanding to locate visual elements.
+
+    \item \textbf{Q: How do two-stream networks process videos, and why is this approach effective?}
+    
+    \textbf{A:} Two-stream networks use separate pathways: a spatial stream processing individual frames to understand objects/scenes, and a temporal stream processing optical flow to capture motion. This is effective because it separates the "what" (object recognition) from the "how" (motion analysis), mirroring human visual processing and allowing specialized architectures for each aspect before combining their insights.
+\end{enumerate}
+
+\subsection*{Advanced Concepts}
+
+\begin{enumerate}
+    \setcounter{enumi}{6}
+    \item \textbf{Q: How do Multimodal Large Language Models (MLLMs) like LLaVa integrate visual information with language models?}
+    
+    \textbf{A:} MLLMs like LLaVa use a vision encoder (like a pre-trained ViT) to extract visual features, which are then transformed by a projection layer to map them into the embedding space of the language model. This allows the language model to process visual tokens alongside text tokens, enabling it to reason about and generate text based on both visual and textual inputs without significant architectural changes to the core LLM.
+
+    \item \textbf{Q: What challenges arise in training multimodal systems, and how are they typically addressed?}
+    
+    \textbf{A:} Challenges include:
+    \begin{itemize}
+        \item (1) Different learning dynamics across modalities, addressed through careful initialization or freezing pre-trained components
+        \item (2) Modality imbalance, addressed through balancing loss terms or gradient manipulation
+        \item (3) Alignment between different semantic spaces, addressed through contrastive learning or joint embedding objectives
+        \item (4) Data requirements, addressed through large-scale pre-training and data augmentation
+        \item (5) Computational complexity, addressed through efficient architectures and training strategies
+    \end{itemize}
+\end{enumerate}
+\section*{Expert-Level Insights and Subtleties}
+
+\begin{enumerate}
+    \item \textbf{Modality Gaps and Alignment}
+    \begin{itemize}
+        \item Different modalities have fundamentally different statistical properties and semantics
+        \item Creating truly aligned representations remains challenging
+        \item Contrastive learning has emerged as a powerful approach but doesn't guarantee perfect alignment
+    \end{itemize}
+    
+    \item \textbf{Transfer and Generalization}
+    \begin{itemize}
+        \item Models like CLIP show remarkable zero-shot transfer capabilities
+        \item Pre-training on diverse, large-scale multimodal data enables generalization
+        \item The quality and diversity of training data often matters more than architectural choices
+    \end{itemize}
+    
+    \item \textbf{Evolution Toward Multimodal Foundation Models}
+    \begin{itemize}
+        \item Trend from task-specific architectures to general-purpose multimodal foundations
+        \item Recent shift toward extending LLMs with multimodal capabilities rather than building custom architectures
+        \item Emergence of multimodal transformers that handle multiple modalities natively
+    \end{itemize}
+    
+    \item \textbf{Open vs. Closed Vocabulary Understanding}
+    \begin{itemize}
+        \item Earlier systems were limited to predefined categories (closed-set)
+        \item Modern approaches enable open-vocabulary understanding through language guidance
+        \item Models like Grounding DINO show how language can extend visual systems to novel concepts
+    \end{itemize}
+    
+    \item \textbf{Cross-Modal Generation}
+    \begin{itemize}
+        \item Beyond understanding, models can now generate one modality from another
+        \item Text-to-image models like those using diffusion processes show remarkable generative capabilities
+        \item These rely on the alignment between modalities established during pre-training
+    \end{itemize}
+\end{enumerate}
+
+\vspace{0.5em}
+\textit{Being able to discuss these more nuanced aspects shows deeper understanding of multimodal learning that would impress in an oral exam setting.}

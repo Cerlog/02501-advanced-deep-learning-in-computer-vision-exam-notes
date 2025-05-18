@@ -1,0 +1,223 @@
+\chapterimage{head2.png} % Chapter heading image
+\chapter{\normalsize Lecture 5: Diffusion Guidance}
+
+\section{Guidance in Diffusion Models: Comprehensive Exam Preparation}
+
+\subsection*{1. Introduction to Guidance in Diffusion Models}
+
+Guidance is a fundamental technique in diffusion models that combines generative image models with additional input information to control the generation process. As the slides indicate, the core concept is to steer the diffusion sampling process toward generating images with specific desired properties.
+
+\textbf{Key Insight:} Guidance modifies the sampling trajectory of a diffusion model by introducing additional terms that \textit{"pull"} the generation process toward specific outcomes.
+
+\section{Types of Guidance}
+
+\subsection{2.1 Classifier Guidance}
+
+Classifier guidance uses a pretrained classifier to steer diffusion models toward generating images of specific classes.
+
+\subsubsection*{Algorithm and Mechanism}
+\begin{itemize}
+    \item Start with a trained, unconditioned diffusion model.
+    \item At each sampling step $t$ (going from $T$ to $1$):
+    \begin{itemize}
+        \item Compute mean ($\mu$) and variance ($\Sigma$) from the diffusion model.
+        \item Apply the classifier gradient:
+        \[
+        x_{t-1} \leftarrow \text{sample from } \mathcal{N}(\mu + s \Sigma \nabla_{x_t} \log p_\phi(y \mid x_t), \Sigma)
+        \]
+        \item Here, $\nabla_{x_t} \log p_\phi(y \mid x_t)$ is the gradient pointing in the direction of the desired class.
+        \item $s$ is a scale factor that amplifies guidance strength.
+    \end{itemize}
+\end{itemize}
+
+\textbf{Key Equation:}
+\[
+x_{t-1} \leftarrow \text{sample from } \mathcal{N}(\mu + s \Sigma \nabla_{x_t} \log p_\phi(y \mid x_t), \Sigma)
+\]
+
+\subsubsection*{Effect of Guidance Scale $s$}
+\begin{itemize}
+    \item Higher $s$ produces more class-consistent images, but reduces diversity.
+    \item Example from slides: Pembroke Welsh Corgi
+    \begin{itemize}
+        \item $s = 1.0$: FID = 33.0
+        \item $s = 10.0$: FID = 12.0
+    \end{itemize}
+    \item \textbf{Mathematical Insight:}
+    \[
+    s \cdot \nabla_{x_t} \log p(y \mid x) = \nabla_{x_t} \log \left( \frac{1}{Z} \cdot p(y \mid x)^s \right)
+    \]
+    \item Increasing $s$ sharpens the distribution
+\end{itemize}
+
+\subsection{2.2 Classifier-Free Guidance}
+
+Classifier-free guidance eliminates the need for a separate classifier by jointly training conditional and unconditional diffusion models.
+
+\subsubsection*{Key Mechanism}
+\begin{itemize}
+    \item During training:
+    \begin{itemize}
+        \item Randomly discard conditioning with probability $p_{\text{uncond}}$ to train both conditional and unconditional models jointly.
+        \item Use one-hot encoding for class conditioning.
+    \end{itemize}
+    \item During sampling:
+    \begin{itemize}
+        \item Combine predictions from both conditional and unconditional models with a weighting factor.
+    \end{itemize}
+\end{itemize}
+
+\subsubsection*{Advantages over Classifier Guidance}
+\begin{itemize}
+    \item No need to train a separate classifier on noisy data
+    \item Simpler training pipeline
+    \item Avoids potential adversarial attack scenarios
+\end{itemize}
+\section{Universal Guidance}
+
+Universal guidance generalizes the concept of guidance to arbitrary functions and loss terms.
+
+\textbf{Key Insight:} If $f(x)$ is any prediction function on image $x$, and $\mathcal{L}$ is a loss function, then guidance by minimizing $\mathcal{L}(c, f(x))$ optimizes for images $x$ where $f(x) \approx c$.
+
+\subsection*{Applications shown in slides}
+\begin{enumerate}
+    \item \textbf{Segmentation guidance:} Guide generation using cross-entropy loss between desired segmentation mask and predicted segmentation of generated image.
+    \item \textbf{Object location guidance:} Using object detection loss with bounding boxes.
+    \item \textbf{Style guidance:} Using cosine similarity between CLIP embeddings of style image and generated image.
+\end{enumerate}
+
+\section{Counterfactual Explanations with Diffusion Guidance}
+
+Counterfactual explanations answer the question: \textit{"How should the input change to obtain a different classification?"}
+
+\subsection*{Implementation with Diffusion Models}
+\begin{itemize}
+    \item The diffusion model provides the data compatibility term (keeps counterfactual realistic).
+    \item A form of classifier guidance provides the direction toward the target class.
+    \item \textbf{Challenge:} Need for noise-aware classifiers.
+    \item \textbf{Solution approaches:}
+    \begin{enumerate}
+        \item Iterative denoising with gradient steps at each time step (expensive, $\mathcal{O}(T^2)$ operations).
+        \item Use closed-form approximation of noise-free image to compute gradient more efficiently.
+    \end{enumerate}
+\end{itemize}
+
+\section{Key Implementation Details and Challenges}
+
+\subsection*{5.1 Noise-Level Aware Classifiers}
+For effective classifier guidance, the classifier must be trained on noisy images at various diffusion timesteps. This is challenging when using off-the-shelf black-box classifiers.
+
+\subsection*{5.2 Efficiency in Guidance Computation}
+\begin{itemize}
+    \item \textbf{Naïve approach:} Requires $\mathcal{O}(T^2)$ denoising steps — very expensive.
+    \item \textbf{Optimized approach:} Use closed-form approximation to estimate clean image from noisy image:
+    \[
+    x_0 = \frac{x_t(x_0, \epsilon) - \sqrt{1 - \bar{\alpha}_t} \, \epsilon}{\sqrt{\bar{\alpha}_t}}
+    \]
+    \item This allows computing the classifier gradient directly without completing full denoising.
+\end{itemize}
+\section{Evaluation Metrics for Guided Diffusion}
+
+\subsection*{6.1 Fréchet Inception Distance (FID)}
+\begin{itemize}
+    \item Measures similarity between generated and real images
+    \item Computes 2-Wasserstein distance between feature distributions extracted by InceptionNet
+    \item Lower FID indicates better quality and higher similarity to training data
+\end{itemize}
+
+\subsection*{6.2 Inception Score}
+\begin{itemize}
+    \item Originates from GAN literature
+    \item Uses pretrained InceptionNet to evaluate sample quality
+    \item Combines:
+    \begin{itemize}
+        \item Low entropy of conditional label distribution (sharp, classifiable images)
+        \item High entropy of marginal distribution (diversity across classes)
+    \end{itemize}
+\end{itemize}
+
+\subsection*{6.3 Precision and Recall}
+\begin{itemize}
+    \item \textbf{Precision:} Measures quality of generated samples
+    \item \textbf{Recall:} Measures coverage of the data distribution
+\end{itemize}
+
+\section{Oral Exam-Style Quiz Questions \& Answers}
+
+\textbf{Q1: What is the key difference between classifier guidance and classifier-free guidance?}\\
+\textbf{A1:} Classifier guidance uses a separately trained classifier to guide the diffusion process, requiring the classifier to understand noisy images at various timesteps. In contrast, classifier-free guidance jointly trains conditional and unconditional diffusion models, eliminating the need for a separate classifier. This simplifies the pipeline and avoids the challenge of training classifiers on noisy data.
+
+\vspace{1em}
+\textbf{Q2: How does the guidance scale parameter 's' affect generated images?}\\
+\textbf{A2:} The guidance scale $s$ controls the strength of the guidance signal. Higher values of $s$ make the model follow the guidance more strongly, resulting in images that better match the desired condition (higher fidelity) but reduce diversity. Mathematically, it sharpens the classifier’s distribution by raising probabilities to the power of $s$.
+
+\vspace{1em}
+\textbf{Q3: Why are one-hot encodings important for class conditioning in classifier-free guidance?}\\
+\textbf{A3:} One-hot encodings provide clear, distinct representations for each class, helping the model learn separate, well-defined distributions. This is essential for effective class conditioning and for learning meaningful inter-class differences.
+
+\vspace{1em}
+\textbf{Q4: How does universal guidance extend the concept of classifier guidance?}\\
+\textbf{A4:} Universal guidance generalizes classifier guidance to any differentiable function $f(x)$ and loss function $\mathcal{L}$. Instead of using only a classifier’s gradient, it can use gradients from segmentation, detection, or style models to optimize arbitrary criteria $\mathcal{L}(c, f(x))$, where $c$ is the desired target and $f(x)$ is the model output on image $x$.
+
+\vspace{1em}
+\textbf{Q5: What is the main challenge in using diffusion models for counterfactual explanations?}\\
+\textbf{A5:} Classifier guidance usually needs classifiers trained on noisy images, but counterfactual use cases often involve off-the-shelf classifiers trained only on clean images. This mismatch requires methods to bridge the gap between classifiers and the noisy states in the diffusion process.
+
+
+\section{Common Misconceptions and Subtleties}
+
+\textbf{Misconception \#1: Classifier guidance simply adds a gradient term to the sampling process}\\
+\textit{Reality:} It's more nuanced – the gradient is scaled by the covariance matrix $\Sigma$ of the diffusion model at that timestep, ensuring guidance is appropriately calibrated to the noise level.
+
+\vspace{0.5em}
+\textbf{Misconception \#2: Higher guidance scales always lead to better results}\\
+\textit{Reality:} There’s a trade-off. Higher guidance scales increase fidelity to the condition but reduce diversity, and can introduce artifacts or unnatural images if pushed too far.
+
+\vspace{0.5em}
+\textbf{Misconception \#3: Classifier-free guidance is always superior to classifier guidance}\\
+\textit{Reality:} Each method has advantages. Classifier guidance can leverage strong pretrained classifiers, while classifier-free guidance simplifies training but requires more compute. The best choice depends on available tools and objectives.
+
+\vspace{0.5em}
+\textbf{Misconception \#4: Guidance is applied uniformly throughout the diffusion process}\\
+\textit{Reality:} The effect of guidance varies over time. Early timesteps (high noise) benefit from stronger guidance to shape structure, while later timesteps (low noise) require less aggressive guidance to preserve detail.
+
+\section{Advanced Applications and Recent Developments}
+
+The slides highlight emerging use cases beyond basic class conditioning:
+
+\begin{itemize}
+    \item Using guidance for counterfactual explanations in image classifiers
+    \item Universal guidance for segmentation, object placement, and style transfer
+    \item Medical applications using counterfactual examples (e.g., detecting surgical markers or tubes)
+\end{itemize}
+
+These demonstrate how diffusion guidance evolved from class-based conditioning to powerful tools for controlled generation across many domains and tasks.
+
+\section{Common Misconceptions and Subtleties}
+
+\textbf{Misconception \#1: Classifier guidance simply adds a gradient term to the sampling process}\\
+\textit{Reality:} It's more nuanced – the gradient is scaled by the covariance matrix $\Sigma$ of the diffusion model at that timestep, ensuring guidance is appropriately calibrated to the noise level.
+
+\vspace{0.5em}
+\textbf{Misconception \#2: Higher guidance scales always lead to better results}\\
+\textit{Reality:} There’s a trade-off. Higher guidance scales increase fidelity to the condition but reduce diversity, and can introduce artifacts or unnatural images if pushed too far.
+
+\vspace{0.5em}
+\textbf{Misconception \#3: Classifier-free guidance is always superior to classifier guidance}\\
+\textit{Reality:} Each method has advantages. Classifier guidance can leverage strong pretrained classifiers, while classifier-free guidance simplifies training but requires more compute. The best choice depends on available tools and objectives.
+
+\vspace{0.5em}
+\textbf{Misconception \#4: Guidance is applied uniformly throughout the diffusion process}\\
+\textit{Reality:} The effect of guidance varies over time. Early timesteps (high noise) benefit from stronger guidance to shape structure, while later timesteps (low noise) require less aggressive guidance to preserve detail.
+
+\section{Advanced Applications and Recent Developments}
+
+The slides highlight emerging use cases beyond basic class conditioning:
+
+\begin{itemize}
+    \item Using guidance for counterfactual explanations in image classifiers
+    \item Universal guidance for segmentation, object placement, and style transfer
+    \item Medical applications using counterfactual examples (e.g., detecting surgical markers or tubes)
+\end{itemize}
+
+These demonstrate how diffusion guidance evolved from class-based conditioning to powerful tools for controlled generation across many domains and tasks.

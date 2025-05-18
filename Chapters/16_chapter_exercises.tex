@@ -1,0 +1,80 @@
+\chapterimage{head2.png} % Chapter heading image
+\chapter{\normalsize Exercise 3: Textual Inversion}
+\section*{Core Concept of Textual Inversion}
+
+Textual Inversion is a technique that allows you to teach a pre-trained text-to-image model (like Stable Diffusion) new visual concepts using just a few example images. The key insight is that you can represent a new visual concept by optimizing a single embedding vector in the text encoder's embedding space, while keeping the rest of the model frozen.
+
+\subsection*{In Simpler Terms}
+\begin{itemize}
+  \item You want the model to learn a new concept (like a specific character, style, or object)
+  \item Instead of fine-tuning the whole model, you only train a new ``word'' (embedding vector)
+  \item This new ``word'' can then be used in prompts just like any other word
+\end{itemize}
+
+\section*{How It Works}
+
+\begin{enumerate}
+  \item \textbf{Adding a New Token:} You add a special placeholder token (like \texttt{<my-concept>}) to the model's tokenizer.
+
+  \item \textbf{Initializing the Embedding:} You initialize this token’s embedding, either:
+    \begin{itemize}
+      \item Randomly (from a normal distribution)
+      \item By copying from a semantically similar token (e.g., ``toy'' for a toy concept)
+    \end{itemize}
+
+  \item \textbf{Freezing the Model:} You freeze all parameters of the model:
+    \begin{itemize}
+      \item The CLIP text encoder
+      \item The U-Net denoiser
+      \item The VAE encoder/decoder
+    \end{itemize}
+
+  \item \textbf{Training Loop:} During training, you:
+    \begin{itemize}
+      \item Process your concept images through the VAE to get latents
+      \item Add noise to these latents
+      \item Create text prompts with your placeholder token
+      \item Predict the noise using the U-Net
+      \item Calculate the loss between predicted and actual noise
+      \item Update only the embedding of your placeholder token
+    \end{itemize}
+
+  \item \textbf{Using the Trained Embedding:} After training, your token’s embedding has been optimized to represent your visual concept. You can use it in prompts like \texttt{"A <my-concept> on a beach"} to create new compositions.
+\end{enumerate}
+\section*{Why It Works}
+This works because diffusion models are conditioned on text embeddings from a text encoder (like CLIP). The text encoder maps tokens to a semantic latent space where similar concepts are nearby. By optimizing a new embedding in this space, you're essentially finding the ``coordinates'' that best represent your visual concept.
+
+The beauty of this approach is that it leverages the composition capabilities of the text encoder. Since your new token lives in the same embedding space as other words, you can compose it with other concepts naturally.
+
+\section*{Key Technical Details}
+
+\subsection*{For the Training Loop Implementation}
+You need to:
+\begin{enumerate}
+  \item Get a batch of images and convert them to latent space using the VAE
+  \item Sample noise and timesteps
+  \item Add noise to the latents
+  \item Get text embeddings for prompts containing your placeholder token
+  \item Predict the noise with the U-Net
+  \item Calculate the loss between predicted and actual noise
+  \item Update only the embedding of your placeholder token
+  \item Apply gradient clipping to stabilize training
+\end{enumerate}
+
+\subsection*{For Concept Generation}
+Once trained:
+\begin{enumerate}
+  \item Load the model with your trained embedding
+  \item Create prompts that include your placeholder token in different contexts
+  \item Generate images with different guidance scales (higher for more faithful reproduction)
+  \item Evaluate the quality using metrics like FID and CLIP score
+\end{enumerate}
+
+\section*{Important Concepts to Understand}
+\begin{enumerate}
+  \item \textbf{Parameter Efficiency:} You're only training a single embedding vector (\textasciitilde768 dimensions) instead of millions or billions of parameters.
+  \item \textbf{Compositionality:} The new concept inherits the compositional properties of language, so it can be combined with other concepts.
+  \item \textbf{Regularization:} Techniques like gradient clipping help prevent the embedding from drifting too far in the embedding space.
+  \item \textbf{Data Efficiency:} Textual Inversion works with very few example images (3--5 is often enough).
+  \item \textbf{Cross-Attention Mechanism:} How the text embeddings condition the diffusion process through cross-attention in the U-Net.
+\end{enumerate}

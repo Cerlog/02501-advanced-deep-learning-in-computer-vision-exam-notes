@@ -1,0 +1,88 @@
+\chapter{Glossary of Terms}
+
+\section{Explainability and Fairness}
+
+\begin{description}
+  \item[Explainable AI (XAI):] Methods and techniques that allow human users to understand, trust, and effectively manage AI systems. In computer vision, it often aims to explain model predictions.
+  \item[Counterfactual XAI:] An explanation that answers "How should the input change to obtain a different classification?" It involves identifying minimal changes to an input that alter the model's prediction.
+  \item[Algorithmic Fairness:] The principle and methods aimed at reducing unwanted bias in algorithmic decision-making, ensuring outcomes are equitable across different groups.
+  \item[Independence (Algorithmic Fairness):] A notion of fairness where the prediction (or acceptance rate) is independent of group membership.
+  \item[Separation (Algorithmic Fairness):] A notion of fairness requiring equal rates of True Positives, False Positives, True Negatives, and False Negatives across different groups.
+  \item[Sufficiency (Algorithmic Fairness):] A notion of fairness requiring equal positive and negative predictive values across different groups, meaning given a prediction, the probability of it being true is the same across groups.
+\end{description}
+
+\section{Transformers and Language Models}
+
+\begin{description}
+  \item[Transformer:] A neural network architecture that relies heavily on self-attention mechanisms to process sequential data, initially developed for natural language processing but adapted for computer vision (Vision Transformers).
+  \item[Transformer Encoder:] Part of the original Transformer architecture responsible for processing the input sequence in parallel and generating contextualized representations.
+  \item[Transformer Decoder:] Part of the original Transformer architecture responsible for generating the output sequence autoregressively, often utilizing masked attention and cross-attention.
+  \item[Self-Attention:] A mechanism within Transformers that allows each element in a sequence to weigh the importance of all other elements in the same sequence when computing its representation.
+  \item[Multi-Head Attention:] An extension of self-attention where the attention mechanism is applied multiple times in parallel with different learned linear projections of the input.
+  \item[Positional Encoding:] A method used in Transformers to inject information about the position of elements in a sequence, as self-attention is permutation-equivariant.
+  \item[Masked Attention:] An attention mechanism used in Transformer Decoders that prevents attention to subsequent positions in the sequence, ensuring autoregressive generation.
+  \item[Cross-Attention:] An attention mechanism used in Transformer Decoders (in Encoder-Decoder models) where the queries come from the decoder's sequence and the keys and values come from the encoder's output sequence.
+  \item[BERT (Bidirectional Encoder Representations from Transformers):] An encoder-only LLM trained using Masked Language Modeling, focusing on understanding and classifying text.
+  \item[GPT (Generative Pre-trained Transformer):] A decoder-only LLM trained using Autoregressive Language Modeling, focusing on generating text.
+  \item[Large Language Models (LLMs):] Language models with a very large number of parameters, trained on vast amounts of text data, capable of performing various NLP tasks including text generation.
+  \item[Tokenization:] The process of converting text into discrete units (tokens) that can be processed by a language model.
+  \item[Decoding Strategies:] Algorithms used to select the next token during the generation process in autoregressive models, examples include Greedy, Beam Search, Multinomial Sampling, Top-K, and Top-P sampling.
+\end{description}
+
+\section{Generative Models and Diffusion}
+
+\begin{description}
+  \item[Generative AI:] AI models capable of creating new data, such as images, text, or audio, that are similar to the data they were trained on.
+  \item[Generative Model:] A model that describes a probability distribution and can sample from it to generate new data points.
+  \item[Density Modelling:] The task of learning the underlying probability distribution of a dataset. Generative models often perform this implicitly or explicitly.
+  \item[Diffusion Models:] A class of generative models that work by gradually adding noise to data (forward process) and then learning to reverse this process to generate new data from noise (reverse process).
+  \item[Forward Diffusion Process:] The process of gradually adding noise to an image over time steps, defined as a Markov chain.
+  \item[Reverse Diffusion Process:] The process of gradually removing noise from a noisy image over time steps to generate a clean image, which is learned by the diffusion model.
+  \item[Variance Schedule ($\beta_t$):] A sequence of hyperparameters that determine the scale of noise added at each step in the forward diffusion process.
+  \item[Denoising:] The task of removing noise from an image; this is what the neural network within a diffusion model learns to do at each step of the reverse process.
+  \item[U-Net:] A convolutional neural network architecture commonly used for image-to-image tasks like segmentation and denoising, often employed as the backbone for diffusion models.
+  \item[Guidance:] Techniques used to steer the generative process of Diffusion Models towards desired attributes, such as generating images belonging to a specific class or matching a text prompt.
+  \item[Classifier Guidance:] A guidance technique for Diffusion Models that uses the gradients of a separate classifier with respect to the image to steer the generation towards a target class.
+  \item[Classifier-Free Guidance:] A guidance technique that trains a single Diffusion Model capable of both unconditional and conditional generation, using a weighted combination of the scores from both to achieve guidance.
+  \item[Counterfactual Explanations (for image classifiers):] Explanations that show the minimal changes required to an image input to change its classification by a model.
+  \item[Universal Guidance:] A guidance framework for Diffusion Models that can incorporate guidance from various modalities (e.g., text prompts, segmentation masks, bounding boxes) using a shared loss function.
+  \item[Latent Diffusion Models:] Diffusion Models that operate in a lower-dimensional latent space learned by an autoencoder, rather than directly in the pixel space, making them more efficient for high-resolution images.
+  \item[Stable Diffusion:] A popular latent diffusion model capable of high-quality text-to-image generation and other image manipulation tasks.
+\end{description}
+
+\section{Self-Supervised and Multimodal Learning}
+
+\begin{description}
+  \item[Self-Supervised Learning (SSL):] A machine learning paradigm where a model learns from unlabelled data by training on "pretext tasks" where the labels are derived automatically from the data itself.
+  \item[Pretext Tasks:] Tasks used in self-supervised learning to train a model without requiring human annotations, such as predicting missing parts of an image or learning spatial relationships.
+  \item[Contrastive Learning:] An SSL approach that learns representations by pulling together embeddings of augmented versions of the same image (positives) and pushing apart embeddings of different images (negatives).
+  \item[MAE (Masked Autoencoders):] An SSL approach that trains a Vision Transformer to reconstruct missing patches of an image.
+  \item[DINO (Self-supervised Vision Transformers):] An SSL approach that trains Vision Transformers by self-distillation, where a "student" network learns from a "teacher" network of the same architecture.
+  \item[Multimodal Learning:] Machine learning that processes and relates information from multiple modalities, such as combining visual and textual data.
+  \item[CLIP (Contrastive Language--Image Pre-training):] A multimodal model trained to connect images and text using a contrastive objective, enabling zero-shot image classification and text-to-image generation.
+  \item[Visual Question Answering (VQA):] A multimodal task where a model is given an image and a natural language question about the image and must provide a natural language answer.
+  \item[Visual Reasoning:] Multimodal tasks requiring deeper understanding and inference about the spatial and semantic relationships between objects in an image based on text queries.
+  \item[Image-Text Contrastive (ITC) Loss:] A loss function used in multimodal training (like BLIP) to align representations from different modalities (image and text) in a shared embedding space.
+  \item[Image-Text Matching (ITM) Loss:] A loss function used in multimodal training (like BLIP) to determine if a given image-text pair is a positive match or a negative mismatch.
+  \item[Language Modeling (LM) Loss:] A loss function used in training language models or the text generation component of multimodal models (like BLIP) to predict the next token in a sequence.
+  \item[Grounding DINO:] An open-set object detection model that can detect objects based on arbitrary text prompts, combining object detection and language grounding.
+  \item[Textual Inversion:] A technique for personalizing generative models (like Stable Diffusion) by learning a new "word" (a text embedding) in the model's vocabulary to represent a specific concept or object from a few example images.
+  \item[Zero-shot Classification:] The ability of a model to classify images into categories it has not seen during training, often enabled by multimodal models like CLIP by relating images to text descriptions of categories.
+\end{description}
+
+\section{Miscellaneous}
+
+\begin{description}
+  \item[Autoregressive:] A property of models that generate sequences one element at a time, conditioning on the previously generated elements.
+  \item[Markov Chain:] A stochastic process where the future state depends only on the current state, not on the sequence of events that preceded it. Used to define the forward process in diffusion models.
+\end{description}
+
+\afterpage{%
+\begin{figure}[p]
+    \centering
+\includegraphics[width=0.5\paperwidth,height=0.5\paperwidth,keepaspectratio]{Pictures/Mind Map Deep Learning Role Play.png}
+\caption{Mind map of the whole course}
+    \label{fig:mindmap}
+\end{figure}
+  \clearpage
+}

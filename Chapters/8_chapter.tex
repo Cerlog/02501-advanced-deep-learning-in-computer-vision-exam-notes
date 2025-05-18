@@ -1,0 +1,231 @@
+\chapterimage{head2.png} % Chapter heading image
+\chapter{\normalsize Lecture 7: self-Supervised Learning}
+\section{Why Self-Supervised Learning?}
+
+Self-supervised learning (SSL) emerged as a solution to two fundamental challenges in deep learning:
+
+\begin{enumerate}
+    \item \textbf{Data hunger}: Deep learning models require massive amounts of data to perform well. The slides show numerous large datasets (ImageNet, COCO, Open Images, CityScapes, ADE20K, etc.) that power modern vision systems.
+    \item \textbf{Annotation bottleneck}: Human annotation is:
+    \begin{itemize}
+        \item Expensive (slides show ``Money??'' with stacks of cash)
+        \item Time-consuming (20--40s per bounding box)
+        \item Not scalable for complex tasks (1.5--2 hours per image for panoptic segmentation)
+    \end{itemize}
+\end{enumerate}
+
+\subsection*{The Key Insight}
+Self-supervised learning leverages the intrinsic structure within unlabeled data to create supervisory signals, enabling models to learn useful representations without human annotations.
+
+\subsection*{Learning Paradigms Comparison}
+From the slides, we can clearly distinguish three approaches:
+
+\begin{table}[H]
+\centering
+\renewcommand{\arraystretch}{1.4}
+\begin{tabular}{|p{4.2cm}|p{4.2cm}|p{4.2cm}|}
+\hline
+\textbf{Supervised Learning} & \textbf{Unsupervised Learning} & \textbf{Self-Supervised Learning} \\
+\hline
+\textbf{Data:} $(x, y)$ pairs where $x$ is data, $y$ is label & \textbf{Data:} $x$ (just data, no labels) & \textbf{Data:} Uses raw data but creates its own supervision \\
+\hline
+\textbf{Goal:} Learn a function to map $x \rightarrow y$ & \textbf{Goal:} Learn underlying hidden structure & \textbf{Goal:} Learn representations that are useful for downstream tasks \\
+\hline
+\textbf{Examples:} Classification, object detection, segmentation & \textbf{Examples:} Clustering, dimensionality reduction & \textbf{Examples:} Pretext tasks like predicting image rotations \\
+\hline
+\textbf{Limitation:} Requires expensive annotations & \textbf{Limitation:} Representations might not be useful for specific tasks & \textbf{Advantage:} Combines best of both worlds \\
+\hline
+\end{tabular}
+\caption{Comparison of Learning Paradigms}
+\end{table}
+\section*{The Self-Supervised Learning Process}
+
+Self-supervised learning (SSL) follows a two-step process:
+
+\subsection*{1. Pretraining Stage}
+\begin{itemize}
+    \item Train a network on a ``pretext task'' that doesn't require human annotations
+    \item The pretext task forces the model to learn useful visual representations
+\end{itemize}
+
+\subsection*{2. Downstream Application}
+\begin{itemize}
+    \item Transfer the pretrained encoder to target tasks
+    \item Use methods like linear classifiers, KNN, or finetuning
+\end{itemize}
+
+\section*{Major Pretext Tasks}
+
+The slides categorize pretext tasks into three types:
+
+\subsection*{1. Generative Tasks}
+Tasks that predict part of the input signal:
+\begin{itemize}
+    \item \textbf{Autoencoders}: Reconstruct inputs, with variants including:
+    \begin{itemize}
+        \item Sparse autoencoders
+        \item Denoising autoencoders
+        \item \textbf{Masked Autoencoders (MAE)}: Divide image into patches, mask most of them, and predict the masked patches
+    \end{itemize}
+    \item \textbf{Colorization}: Convert grayscale images to color
+    \item \textbf{Inpainting}: Remove parts of an image and train the model to reconstruct them
+\end{itemize}
+
+\subsection*{2. Discriminative Tasks}
+Tasks that predict properties about the input:
+\begin{itemize}
+    \item \textbf{Context Prediction}: Predict relative location of patches from the same image (8 positions)
+    \item \textbf{Rotation Prediction}: Predict the rotation applied to an image
+    \item \textbf{Deep Clustering}:
+    \begin{enumerate}
+        \item Randomly initialize CNN
+        \item Extract features from many images
+        \item Cluster features with K-means
+        \item Use cluster assignments as pseudo-labels
+        \item Repeat
+    \end{enumerate}
+    \item \textbf{Contrastive Learning}:
+    \begin{itemize}
+        \item Identify which pairs of augmented images came from the same original image
+        \item Creates a similarity matrix between samples
+        \item Positive pairs (same image, different augmentations) $\rightarrow$ high similarity
+        \item Negative pairs (different images) $\rightarrow$ low similarity
+    \end{itemize}
+\end{itemize}
+
+\subsection*{3. Multimodal Tasks}
+Use additional signals besides RGB images:
+\begin{itemize}
+    \item \textbf{Video}: Use temporal consistency between frames
+    \item \textbf{Sound}: Match images with audio
+    \item \textbf{3D}: Use depth information
+    \item \textbf{Language}: Match images with text descriptions (like CLIP)
+\end{itemize}
+\section*{Influential Methods}
+
+\subsection*{DINO (Self-supervised Vision Transformers)}
+\begin{itemize}
+    \item Uses a student-teacher architecture
+    \item Teacher parameters updated with EMA of student parameters
+    \item Shows impressive results in semantic segmentation, depth estimation, and instance retrieval
+    \item Produced by Facebook AI Research
+\end{itemize}
+
+\subsection*{CLIP (Contrastive Language-Image Pretraining)}
+\begin{itemize}
+    \item Uses natural language supervision
+    \item Image and text encoders trained to predict which caption matches which image
+    \item Enables zero-shot classification by comparing image embeddings with text embeddings of class names
+\end{itemize}
+
+\section*{Architecture Components}
+
+\subsection*{Encoders}
+\begin{itemize}
+    \item Networks that extract features from input data
+    \item Can be CNNs or Vision Transformers
+    \item The valuable part that gets transferred to downstream tasks
+\end{itemize}
+
+\subsection*{Data Augmentations}
+\begin{itemize}
+    \item Critical for many SSL methods, especially contrastive learning
+    \item Create different views of the same image: crops, color jitter, rotations
+    \item Help models learn invariances to these transformations
+\end{itemize}
+
+\subsection*{Projection Heads}
+\begin{itemize}
+    \item Additional layers after the encoder
+    \item Used to map features to a space where contrastive loss is applied
+    \item Often discarded when transferring to downstream tasks
+\end{itemize}
+
+\section*{Performance Insights}
+The slides show that SSL approaches have made significant progress:
+\begin{itemize}
+    \item Contrastive approaches like MoCo, SimCLR show major improvements over earlier methods
+    \item SSL methods reach 60--70\% of fully supervised performance
+    \item SSL features can be competitive with ImageNet supervision for downstream tasks
+    \item DINOv2 achieves state-of-the-art results on multiple benchmarks without any supervision
+\end{itemize}
+\section*{Alternative Approaches to Reduce Annotation Costs}
+
+\begin{itemize}
+    \item \textbf{Active Learning}: Intelligently select which samples to annotate.
+    
+    \item \textbf{Weakly Supervised Learning}: Use image-level labels instead of bounding boxes.
+    
+    \item \textbf{Human-Machine Collaboration}: Combine human expertise with machine efficiency.
+    \begin{itemize}
+        \item Examples: Verification, center-clicking, extreme clicking
+        \item Google reported using extreme clicking for 300M bounding boxes internally
+    \end{itemize}
+\end{itemize}
+\section*{Oral Exam Practice Questions}
+
+\subsection*{Fundamental Concepts}
+
+\textbf{Q1: What is self-supervised learning and how does it differ from supervised and unsupervised learning?}
+
+\textbf{A:} Self-supervised learning creates supervisory signals from unlabeled data itself. Unlike supervised learning, it doesn't require human annotations, and unlike unsupervised learning, it explicitly defines a pretext task with clear learning objectives rather than just discovering data structure.
+
+\textbf{Q2: Explain the two-step process in self-supervised learning.}
+
+\textbf{A:} First, a model is pretrained on a pretext task that doesn't require human annotations (like predicting image rotations or missing patches). Second, the pretrained encoder is transferred to downstream tasks by attaching task-specific heads and using methods like linear probing or fine-tuning.
+
+\subsection*{Pretext Tasks}
+
+\textbf{Q3: Name and explain three categories of pretext tasks in self-supervised learning.}
+
+\textbf{A:}
+\begin{enumerate}
+    \item \textbf{Generative tasks:} Predict parts of the input (e.g., autoencoders, colorization)
+    \item \textbf{Discriminative tasks:} Predict properties about the input (e.g., rotation, context prediction, contrastive learning)
+    \item \textbf{Multimodal tasks:} Use additional signals beyond RGB images (e.g., video, sound, text, 3D)
+\end{enumerate}
+
+\textbf{Q4: How does contrastive learning work in self-supervised learning?}
+
+\textbf{A:} Contrastive learning creates different augmentations of the same images, then trains the model to pull representations of augmentations from the same image closer together (positive pairs) while pushing representations from different images apart (negative pairs). This typically uses a similarity-based loss function.
+
+\subsection*{Technical Details}
+
+\textbf{Q5: What is the role of data augmentation in self-supervised learning?}
+
+\textbf{A:} Data augmentation creates different views of the same instance, allowing the model to learn invariances to transformations that don't change semantic content. This helps build robust representations that focus on important image properties rather than superficial details.
+
+\textbf{Q6: Explain the concept of a ``pretext task'' and provide two examples.}
+
+\textbf{A:} A pretext task is an artificial task designed to force the model to learn useful representations without human annotations. Examples include predicting the relative position of image patches (context prediction), reconstructing masked image patches (MAE), or identifying which augmented images came from the same original image (contrastive learning).
+\subsection*{Methods and Models}
+
+\textbf{Q7: How does DINO work and what makes it effective?}
+
+\textbf{A:} DINO uses a student-teacher architecture where the student processes two different augmentations of an image, and the teacher processes another. The student is trained to match the teacher's output distributions, while the teacher is updated using an exponential moving average (EMA) of the student's parameters. This self-distillation process produces features with emergent properties like semantic segmentation.
+
+\textbf{Q8: What is CLIP and how does it enable zero-shot classification?}
+
+\textbf{A:} CLIP (Contrastive Language-Image Pretraining) trains image and text encoders to predict which captions match which images in a dataset. For zero-shot classification, it encodes class names as text (e.g., ``a photo of a dog'') and compares image embeddings with these text embeddings to predict the class.
+
+\subsection*{Performance and Applications}
+
+\textbf{Q9: How do self-supervised methods compare to supervised methods in terms of performance?}
+
+\textbf{A:} Self-supervised methods have significantly improved, with current methods reaching 60--70\% of fully supervised performance. For some specific tasks like semantic segmentation, methods like DINO can achieve competitive results without any supervision. The gap continues to narrow with newer methods.
+
+\textbf{Q10: Why is self-supervised learning particularly important for computer vision?}
+
+\textbf{A:} Computer vision tasks typically require large amounts of labeled data that is expensive and time-consuming to create (e.g., 1.5--2 hours per image for panoptic segmentation). Self-supervised learning allows models to learn from vast amounts of unlabeled images, reducing dependence on annotations and enabling more generalizable representations.
+
+\subsection*{Commonly Overlooked Details}
+
+\begin{itemize}
+    \item \textbf{Feature collapse problem:} Without proper constraints, self-supervised models might learn to produce constant or trivial features. Methods use various techniques to prevent this, like contrastive loss, stop-gradient operations, or batch normalization.
+    
+    \item \textbf{Projection heads:} Many methods use a projection head on top of the encoder during pretraining but discard it for downstream tasks. This separation between pretraining and representation spaces is important for performance.
+    
+    \item \textbf{Teacher-student asymmetry:} In methods like DINO, creating asymmetry between teacher and student networks (through EMA updates, centering, or temperature differences) is crucial for preventing representation collapse.
+    
+    \item \textbf{Transfer gap:} The performance on pretext tasks doesn't always correlate perfectly with downstream task performance. Good pretext tasks should align with properties needed for downstream applications.
+\end{itemize}

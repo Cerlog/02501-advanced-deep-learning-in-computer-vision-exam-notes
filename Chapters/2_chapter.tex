@@ -1,0 +1,171 @@
+\chapterimage{head2.png} % Chapter heading image
+\chapter{\normalsize Lecture 2: Visual Transformers}
+
+\section{Foundational Concepts}
+
+\subsection*{Evolution from NLP to Vision}
+\begin{itemize}
+    \item \textbf{Original Transformer (2017):} \textit{"Attention is All You Need"} paper – revolutionized NLP
+    \item \textbf{Key insight:} "An image is worth 16$\times$16 words" – treating image patches as tokens
+    \item \textbf{Paradigm shift:} Moving from convolution-based architectures to attention-based ones
+    \item \textbf{Main advantage:} Global receptive field from the start (vs. CNNs' local receptive fields)
+\end{itemize}
+
+\subsection*{Core Differences: NLP vs. Vision Transformers}
+
+\begin{center}
+\begin{tabular}{|l|l|l|}
+\hline
+\textbf{Aspect} & \textbf{NLP Transformers} & \textbf{Vision Transformers} \\
+\hline
+Input & 1D sequence of word tokens & 2D grid of pixels converted to patch tokens \\
+\hline
+Positional encoding & 1D sequence positions & 2D spatial positions (learned, not sinusoidal) \\
+\hline
+Scale challenges & Hundreds/thousands of tokens & High-resolution images $\rightarrow$ millions of pixels \\
+\hline
+Inductive bias & Minimal language structure bias & No built-in spatial locality (unlike CNNs) \\
+\hline
+Data requirements & Moderate & Higher (to compensate for lack of inductive bias) \\
+\hline
+\end{tabular}
+\end{center}
+
+\section{Vision Transformer (ViT) Architecture}
+
+\subsection*{Input Processing Pipeline}
+\begin{enumerate}
+    \item \textbf{Patch extraction:} Divide image into non-overlapping patches (typically 16$\times$16 pixels)
+    \item \textbf{Linear projection:} Flatten patches and project to embedding dimension (D)
+    \item \textbf{Class token:} Add learnable [CLS] token for classification (like BERT)
+    \item \textbf{Positional embedding:} Add learned positional embeddings to retain spatial information
+\end{enumerate}
+
+\subsection*{Core Components}
+\begin{itemize}
+    \item \textbf{Transformer Encoder:} Series of Multi-Head Self-Attention layers and MLPs
+    \item \textbf{Self-Attention:} Same mechanism as in NLP transformers
+    \item \textbf{MLP Head:} Final classification layer applied to [CLS] token output
+\end{itemize}
+
+\subsection*{ViT Variants and Scaling}
+\begin{itemize}
+    \item \textbf{Size variants:} Base (L=12, H=768), Large (L=24, H=1024), Huge (L=32, H=1280)
+    \item \textbf{Training efficiency:} ViT with 2.5k TPU days outperforms ResNet with 9.9k TPU days
+    \item \textbf{Patch size impact:} Smaller patches $\rightarrow$ more tokens $\rightarrow$ higher computational cost but better performance
+\end{itemize}
+\section{Hierarchical Vision Transformers}
+
+\subsection*{Swin Transformer}
+\begin{itemize}
+    \item \textbf{Key innovation:} Hierarchical structure with shifted windows of attention
+    \item \textbf{Window-based attention:} Compute self-attention within local windows to reduce complexity
+    \item \textbf{Shifting windows:} Alternate layers shift attention windows to enable cross-window connections
+    \item \textbf{Progressive downsampling:} Merge neighboring patches to create hierarchical representation
+    \item \textbf{Complexity:} Linear complexity with image size (vs. quadratic in vanilla ViT)
+\end{itemize}
+
+\subsection*{Advantages}
+\begin{itemize}
+    \item \textbf{Efficiency:} $\mathcal{O}(n)$ complexity vs. $\mathcal{O}(n^2)$ in vanilla transformers
+    \item \textbf{Multi-scale processing:} Better suited for dense prediction tasks (detection, segmentation)
+    \item \textbf{Performance:} Strong results with less computational resources
+\end{itemize}
+
+\section{Object Detection with Transformers}
+
+\subsection*{DETR (DEtection TRansformer)}
+\textbf{End-to-end approach:} No need for hand-designed components like anchors and NMS
+
+\subsection*{Architecture}
+\begin{enumerate}
+    \item CNN backbone extracts features
+    \item Transformer encoder processes these features
+    \item Transformer decoder with object queries predicts boxes directly
+    \item Feed-forward networks convert query outputs to box coordinates and class labels
+\end{enumerate}
+
+\subsection*{Bipartite Matching Loss}
+\begin{itemize}
+    \item \textbf{Key innovation:} One-to-one assignment between predictions and ground truth
+    \item \textbf{Contrast with traditional methods:} Traditional detectors use one-to-many assignment with NMS
+    \item \textbf{Implementation:} Hungarian algorithm to find optimal matching
+    \item \textbf{Training formulation:} Predefined number of queries (N) matched to ground truth boxes plus ``no object'' fillers
+\end{itemize}
+
+\subsection*{Benefits}
+\begin{itemize}
+    \item \textbf{Simplified pipeline:} Direct set prediction without post-processing
+    \item \textbf{Global reasoning:} Objects predicted in relation to each other
+    \item \textbf{Parallel decoding:} All objects predicted simultaneously
+\end{itemize}
+
+\section{Image Segmentation with Transformers}
+
+\subsection*{Key Architectures}
+\begin{itemize}
+    \item \textbf{SETR:} Encoder-only approach with CNN decoder for upsampling
+    \item \textbf{SegFormer:} Efficient hierarchical design with lightweight decoder
+    \item \textbf{MaskFormer:} Query-based approach with mask predictions (treats segmentation as mask classification)
+    \item \textbf{Mask2Former:} Improved MaskFormer with masked attention mechanism
+\end{itemize}
+
+\subsection*{Common Principles}
+\begin{itemize}
+    \item \textbf{Global context:} Transformers capture long-range dependencies important for segmentation
+    \item \textbf{Query-based formulation:} Moving from per-pixel classification to mask prediction
+    \item \textbf{Unified approach:} Same architecture works for semantic, instance, and panoptic segmentation
+\end{itemize}
+
+\section{Advanced Concepts}
+
+\subsection*{Positional Encoding in Vision}
+\begin{itemize}
+    \item \textbf{Learned 1D embeddings:} Despite dealing with 2D images, ViT uses 1D position embeddings
+    \item \textbf{Emergent properties:} Position embeddings learn to encode:
+    \begin{itemize}
+        \item Distance (closer patches $\rightarrow$ similar embedding)
+        \item Row/column structure (patches in same row/col have similar embeddings)
+        \item 2D image topology (despite only being trained with 1D sequence)
+    \end{itemize}
+\end{itemize}
+
+\subsection*{Attention Visualization and Interpretability}
+\begin{itemize}
+    \item \textbf{Attention rollout:} Method to visualize attention flow through multiple layers
+    \item \textbf{Last layer attention:} Shows which patches are most relevant for classification
+    \item \textbf{Visual examples:} Shows transformers attend to semantically meaningful parts of images
+\end{itemize}
+
+\subsection*{Memory and Computational Challenges}
+\begin{itemize}
+    \item \textbf{Full self-attention:} $\mathcal{O}(n^2)$ complexity is problematic for high-resolution images
+    \item \textbf{Strategies to address:}
+    \begin{enumerate}
+        \item Window-based attention (Swin)
+        \item Hierarchical architectures
+        \item Linear attention approximations
+        \item Hybrid CNN-Transformer architectures
+    \end{enumerate}
+\end{itemize}
+\section{Quiz Questions with Answers}
+
+\begin{enumerate}
+    \item \textbf{Q:} What is the fundamental difference in how ViT processes images compared to CNNs?\\
+    \textbf{A:} ViT splits images into patches and processes them as a sequence using self-attention, whereas CNNs use local convolution operations with increasing receptive fields through the network.
+
+    \item \textbf{Q:} Why do Vision Transformers typically require more training data than CNNs?\\
+    \textbf{A:} Vision Transformers lack the inductive biases of CNNs (locality, translation equivariance) and must learn these relationships from data, requiring more examples to generalize well.
+
+    \item \textbf{Q:} Explain the purpose of the [CLS] token in Vision Transformers.\\
+    \textbf{A:} The [CLS] token is a learnable embedding prepended to the sequence of patch embeddings. Through self-attention, it aggregates information from all patches, and its final representation is used for image classification.
+
+    \item \textbf{Q:} How does the bipartite matching loss in DETR eliminate the need for NMS?\\
+    \textbf{A:} Bipartite matching creates a one-to-one assignment between predictions and ground truth objects, forcing the model to output exactly one prediction per object. This inherently avoids duplicate detections, making NMS unnecessary.
+
+    \item \textbf{Q:} What is the key innovation of Swin Transformer that addresses the computational complexity of ViT?\\
+    \textbf{A:} Swin Transformer computes self-attention within local windows rather than globally, reducing complexity from $\mathcal{O}(n^2)$ to $\mathcal{O}(n)$. It also uses shifted window patterns between layers to allow information flow across windows.
+
+    \item \textbf{Q:} How does MaskFormer change the approach to semantic segmentation compared to traditional methods?\\
+    \textbf{A:} MaskFormer reformulates semantic segmentation from per-pixel classification to a set prediction problem, where the model predicts masks with associated class labels, similar to DETR's approach to object detection.
+\end{enumerate}

@@ -1,0 +1,44 @@
+"You are an expert in deep learning education preparing a student for an oral exam. The attached PDF is a teacher’s presentation covering the first part of the course, specifically focusing on Attention, Encoders, and Transformers.
+
+Your task is to:
+
+Extract the most essential concepts, equations, and definitions that are likely to be asked in an oral exam.
+
+Identify and summarize examples or visual explanations used in the slides to clarify the ideas.
+
+Point out connections between the concepts (e.g., how attention relates to encoder layers).
+
+Provide short quiz questions (with answers) to help me test my understanding.
+
+Flag any important details students often overlook but that teachers may expect deeper understanding of in oral exams.
+
+Keep the output structured, clear, and focused on exam readiness."
+
+
+_________________________________________
+
+"You are an expert in generative modeling and machine learning education helping a student prepare for an oral exam. The attached file contains lecture notes on Introduction to Diffusion Models.
+
+Your task is to:
+
+Extract and explain the most essential concepts, equations, and stages of diffusion models that are likely to be asked in an oral exam.
+
+Clearly describe the forward (diffusion) process and the reverse (denoising) process, including the mathematical formulation and intuition behind each.
+
+Highlight key terms and concepts such as Gaussian noise, variational inference, ELBO, score matching, and the denoising score matching objective.
+
+Provide simple illustrative examples or diagrams mentioned in the notes (e.g., progressive noise addition, sampling process).
+
+Offer quiz questions and answers to help the student reinforce understanding (e.g., “What is the role of the noise schedule?” or “What does the model learn in DDPMs?”).
+
+Emphasize common pitfalls and deep insights examiners may expect, such as:
+
+How diffusion connects to VAEs
+
+Why training is stable in DDPMs
+
+The trade-off between sample quality and speed
+
+The role of the β (beta) schedule in diffusion
+
+Please format your answer in clear sections, and focus the explanations on oral exam readiness and conceptual understanding."

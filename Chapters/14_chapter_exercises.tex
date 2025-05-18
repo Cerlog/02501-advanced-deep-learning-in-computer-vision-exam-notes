@@ -1,0 +1,211 @@
+\chapterimage{head2.png} % Chapter heading image
+\chapter{\normalsize Exercise 3 AndersenGPT}
+
+\subsection*{1. Core Transformer and GPT Concepts}
+
+\subsubsection*{Masked Attention Implementation}
+The first task in your exercise requires implementing the masked attention mechanism in the \texttt{MaskedAttention} class of \texttt{gpt.py}. This is a fundamental component of autoregressive language models like GPT.
+
+\subsubsection*{What is Causal (Masked) Self-Attention?}
+Causal attention ensures that when predicting the next token, the model can only attend to previous tokens in the sequence (including the current one), not future ones. This is critical for autoregressive generation because:
+
+\begin{itemize}
+    \item It prevents \textquotedblleft cheating\textquotedblright{} during training by looking at future tokens
+    \item It enables step-by-step text generation at inference time
+    \item It maintains the probabilistic factorization: 
+    $$
+    p(x_1, \dots, x_n) = p(x_1) \cdot p(x_2|x_1) \cdot \dots \cdot p(x_n|x_1,\dots,x_{n-1})
+    $$
+\end{itemize}
+\subsection*{Differences from Bidirectional Attention}
+
+Unlike BERT (which uses bidirectional attention), GPT uses causal attention:
+
+\begin{itemize}
+    \item \textbf{BERT:} Can see the entire context in both directions (useful for understanding)
+    \item \textbf{GPT:} Can only see past and current tokens (necessary for generation)
+\end{itemize}
+
+This difference explains why BERT excels at understanding tasks (classification, NER) while GPT excels at generation tasks.
+
+\subsection*{Transformer Decoder Architecture}
+
+The \texttt{EncoderBlock} in your code is actually functioning as a decoder block (despite its name). The structure features:
+
+\begin{itemize}
+    \item \textbf{Layer Normalization} before attention and feed-forward (Pre-LN architecture)
+    \item \textbf{Self-attention} with causal masking
+    \item \textbf{Residual connections} after each sub-block
+    \item \textbf{Feed-forward network} with GELU activation
+    \item \textbf{Dropout} for regularization
+\end{itemize}
+
+The Pre-LN architecture (LayerNorm before attention) is important for stable training of deep transformer networks.
+
+\subsection*{Positional Encoding}
+
+GPT needs to know the position of tokens in the sequence since self-attention is permutation-invariant. Your code implements two types:
+
+\begin{itemize}
+    \item \textbf{Fixed sinusoidal encoding} (\texttt{PositionalEncoding}): Uses sine and cosine functions of different frequencies
+    \item \textbf{Learnable positional embeddings} (\texttt{PositionalEmbedding}): Learns position representations during training
+\end{itemize}
+
+The exercise includes an opportunity to compare these approaches by setting the \texttt{pos\_enc} parameter to either \texttt{"fixed"} or \texttt{"learnable"}.
+\section*{2. Text Generation Strategies}
+
+For the autoregressive generation function in \texttt{test.py}, you'll implement:
+
+\subsection*{Greedy Decoding}
+
+\begin{lstlisting}[language=Python]
+# If input_ids is too long, keep only the last MAX_SEQ_LEN tokens
+if input_ids.size(1) > MAX_SEQ_LEN:
+    input_ids = input_ids[:, -MAX_SEQ_LEN:]
+
+# Forward pass to get logits for all tokens in the sequence
+logits = model(input_ids)
+
+# Get the logits for the last token only
+next_token_logits = logits[:, -1, :]
+
+# Greedy: choose the token with highest probability
+next_token_id = next_token_logits.argmax(dim=-1, keepdim=True)
+
+# Append predicted token to input_ids
+input_ids = torch.cat([input_ids, next_token_id], dim=1)
+
+# Stop if EOS token is generated
+if next_token_id.item() == tokenizer.eos_token_id:
+    break
+\end{lstlisting}
+
+\textbf{Greedy decoding} \emph{always selects the highest probability token}, which leads to:
+
+\begin{itemize}
+    \item More predictable, deterministic outputs
+    \item Often repetitive and less creative text
+    \item Tendency to get stuck in loops or repetitive patterns
+\end{itemize}
+\subsection*{Multinomial Sampling with Temperature}
+
+For the sampling strategy, you'll implement:
+
+\begin{lstlisting}[language=Python]
+# Convert logits to probabilities with temperature
+temperature = 0.8  # Adjust this value to control randomness
+probabilities = F.softmax(next_token_logits / temperature, dim=-1)
+
+# Sample from the probability distribution
+next_token_id = torch.multinomial(probabilities, num_samples=1)
+\end{lstlisting}
+
+The temperature parameter controls the \textbf{``randomness''} of the sampling:
+
+\begin{itemize}
+    \item $\mathbf{T < 1.0}$: More conservative, higher probabilities become even more likely
+    \item $\mathbf{T = 1.0}$: Standard sampling from model distribution
+    \item $\mathbf{T > 1.0}$: More exploratory, flattens the distribution for more variety
+\end{itemize}
+
+Higher temperatures produce more diverse but potentially less coherent text, while lower temperatures produce more focused but potentially repetitive text.
+\section*{3. Experimental Design \& Analysis}
+
+\subsection*{Training from Scratch vs. Fine-tuning}
+
+The exercise includes an option to train from scratch or fine-tune from a pretrained checkpoint:
+
+\begin{lstlisting}[language=Python]
+if START_FROM_PRETRAINED_GPT2_CHECKPOINT:
+    model.load_state_dict(torch.load("gpt2_pretrained.pt"))
+\end{lstlisting}
+
+Key considerations:
+
+\begin{itemize}
+    \item \textbf{Fine-tuning} leverages knowledge from pretraining (faster convergence, better performance with less data)
+    \item \textbf{Training from scratch} requires more data and computation but may better capture the specific style of Andersen
+\end{itemize}
+
+If you try both approaches, compare:
+
+\begin{itemize}
+    \item Convergence speed (how quickly validation loss improves)
+    \item Final model perplexity
+    \item Qualitative assessment of generated text
+\end{itemize}
+
+\subsection*{Context Length Considerations}
+
+The exercise sets \texttt{MAX\_SEQ\_LEN = 1024}, but you could experiment with different values:
+
+\begin{itemize}
+    \item \textbf{Shorter context}: Faster training and inference, but less coherence across longer stories
+    \item \textbf{Longer context}: Better long-range dependencies, but more computationally expensive
+\end{itemize}
+
+For fairy tales, longer contexts may be valuable for maintaining narrative consistency and character development.
+
+\subsection*{Sampling Strategies Comparison}
+
+In your report, analyze how different decoding strategies affect generated text:
+
+\begin{itemize}
+    \item \textbf{Greedy}: Usually more coherent locally but can be repetitive
+    \item \textbf{Sampling (low temp)}: More coherent with some variety
+    \item \textbf{Sampling (high temp)}: More diverse but potentially less coherent
+    \item \textbf{Beam search (optional)}: Tries to balance quality and diversity by exploring multiple paths
+\end{itemize}
+
+Include examples of text generated with different strategies to illustrate these differences.
+\section*{4. Learning Objectives and Expected Outcomes}
+
+This exercise teaches you:
+
+\begin{enumerate}
+    \item The internal mechanics of transformer-based language models
+    \item How to implement and train a GPT-style model from scratch
+    \item Different text generation strategies and their effects
+    \item The importance of design choices like context length and positional encoding
+\end{enumerate}
+
+For your 4-page report, focus on:
+
+\begin{itemize}
+    \item Clear explanation of your implementation choices
+    \item Analysis of model training (loss curves, perplexity)
+    \item Comparison of generation strategies (with examples)
+    \item Discussion of how different parameters affect output quality
+\end{itemize}
+
+\subsection*{Oral Exam-Style Questions}
+
+Prepare for questions like:
+
+\subsubsection*{1. Architectural Understanding}
+\begin{itemize}
+    \item Why does GPT use causal masking while BERT uses bidirectional attention?
+    \item What would happen if you removed the causal mask in a GPT model?
+    \item How do residual connections help in training deep transformer networks?
+\end{itemize}
+
+\subsubsection*{2. Generation Strategies}
+\begin{itemize}
+    \item Why is greedy decoding often suboptimal for creative text generation?
+    \item What is the effect of temperature in multinomial sampling?
+    \item What are the tradeoffs between beam search and multinomial sampling?
+\end{itemize}
+
+\subsubsection*{3. Training and Fine-tuning}
+\begin{itemize}
+    \item Why is fine-tuning from a pretrained model more data-efficient than training from scratch?
+    \item How does the choice between fixed vs. learnable positional encodings affect model performance?
+    \item What effect would increasing the context length have on training and output quality?
+\end{itemize}
+
+\subsubsection*{4. Implementation Details}
+\begin{itemize}
+    \item Why do we need to crop the input sequence to MAX\_SEQ\_LEN during generation?
+    \item How does the model represent and learn word relationships?
+    \item What role does the layer normalization placement (Pre-LN vs. Post-LN) play in training stability?
+\end{itemize}
