@@ -42,7 +42,6 @@ This repository contains the complete lecture notes and supplementary material f
 | 9   | **Explainable AI**                     |
 | 10  | **Fairness in Computer Vision**        |
 
-> *Slides & detailed markdown summaries for each lecture are located in the `lectures/` directory.*
 
 ---
 
