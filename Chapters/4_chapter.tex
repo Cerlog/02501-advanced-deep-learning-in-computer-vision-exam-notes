@@ -110,7 +110,12 @@ At each training iteration:
     \]\end{definition}
     \item Make a gradient update of the MSE loss w.r.t. $\theta$
 \end{enumerate}
-
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\linewidth]{billede.png}
+    \caption{Illustration of the denoising diffusion process using a U-Net architecture. At each denoising step, the U-Net model $\epsilon_\theta$ predicts the noise component $\epsilon$ present in the noisy image $x_t$. Rather than directly predicting the clean image, the model outputs the estimated noise $\hat{\epsilon}_\theta(x_t, t)$, which is then subtracted from $x_t$ (with appropriate scaling based on the diffusion schedule) to obtain the less noisy image approximation $x_{t-1}$. This approach, where the network is trained to minimize $\mathbb{E}[\|\epsilon - \hat{\epsilon}_\theta(x_t, t)\|^2]$, has been shown to provide more stable training dynamics than directly predicting the denoised image.}
+    \label{fig:unet_denoising}
+\end{figure}
 \subsection*{Sampling}
 For sampling from the model:
 \begin{enumerate}
@@ -126,6 +131,8 @@ For sampling from the model:
     \item Sample $x_{t-1} \sim \mathcal{N}(\mu_\theta, \Sigma_\theta)$
     \item Repeat iteratively to sample $x_{t-1}$ from $x_T$
 \end{enumerate}
+
+
 
 \section{Key Exam Topics and Common Questions}
 
