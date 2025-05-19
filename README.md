@@ -1,6 +1,6 @@
 # DTU 02501 — Advanced Deep Learning in Computer Vision
 
-> **Semester:** Spring 2025 | **ECTS:** 10 | **Institution:** Technical University of Denmark (DTU)
+> **Semester:** Spring 2025 | **ECTS:** 5 | **Institution:** Technical University of Denmark (DTU)
 
 This repository contains the complete lecture notes and supplementary material for **DTU 02501 – Advanced Deep Learning in Computer Vision**. The course explores state‑of‑the‑art deep‑learning techniques for visual understanding and generation, spanning transformers, diffusion models, self‑supervised & multimodal learning, explainability, and fairness.
 
